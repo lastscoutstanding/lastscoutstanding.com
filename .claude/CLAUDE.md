@@ -31,13 +31,14 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/reunie.js` | Gedeeld: speltakken.txt inlezen, jaren berekenen, persoonskaartje, `esc()`, jaarvelden-pijltjes |
 | `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. Nu DEMO (localStorage), later Supabase |
 | `reunie25/nav.js` | Kop, navigatie, footer en de gele testversie-balk (bij DEMO) |
+| `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
 | `reunie25/theme.css` | Stijl; kleuren van scoutingbrandevoort.nl (#2c4696) en het logo (geel). Licht/donker volgt het systeem |
 
 ## Reünie
 
 - Zondag 23 mei 2027, blokhut de Brandnetel, Helmond. Scouting Brandevoort is opgericht in 2001.
 - "Scobra" alleen heel spaarzaam gebruiken (nu één keer, in de footer): niet iedereen vindt het een goede naam.
-- Logo wordt nu direct van scoutingbrandevoort.nl geladen (`LOGO` in `nav.js`), 120×110 PNG voor een blauwe achtergrond.
+- Logo: `reunie25/logo.svg` (zwarte letters) en `logo-wit.svg` (witte letters, in de blauwe kop; ook favicon via `nav.js`). Omgezet van het originele Illustrator-bestand uit 2011 (`~/Documents/Peter/Scouting Brandevoort/Nieuwe logo/20110503 Definitief/`), een PDF-compatibel `.ai`. macOS rendert dat bestand met een zwarte lelie; de SVG heeft de juiste kleuren (geel #ffe400, rood #fa0000, blauw #495faa).
 - Persoon: voornaam, achternaam, e-mail, geboortejaar, `takken: [{speltak, rol: 'lid'|'leiding', van, tot}]` (`tot` null = heden), `toon: {voornaam, achternaam, leeftijd, takken}`, `sinds`.
 - Jeugdlid-jaren worden berekend uit geboortejaar + `speltakken.txt` (je zit in een speltak tot de leeftijd van de volgende), in kalenderjaren, en zijn met de hand aan te passen. Leiding-jaren vult iemand zelf in.
 - Leeftijd = 2027 − geboortejaar (één te hoog voor wie na 23 mei jarig is).
@@ -48,7 +49,6 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 ## Open punten
 
 - [ ] Supabase koppelen in `data.js`: Bas maakt het account/project aan (EU-regio). Tabel + view voor de publieke rij + row level security, inloggen met e-mailcode (OTP). Uitzoeken of eigen SMTP nodig is voor de inlogmails.
-- [ ] Logo lokaal opslaan (groter of SVG) in plaats van hotlinken.
 - [ ] Privacyverklaring afmaken: contactadres comité, wanneer gegevens gewist worden.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
