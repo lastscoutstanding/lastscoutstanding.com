@@ -62,7 +62,7 @@ Besloten op 18 november 2026, na een mockup:
 - [ ] Rate limit in Supabase (standaard 30 mails/uur) ophogen vóór de aankondiging; aankondiging eventueel spreiden vanwege 100 mails/dag bij Resend.
 - [ ] Gratis project pauzeert na een week zonder activiteit: keep-alive (bijv. GitHub Action) uitzoeken.
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
-- [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
+- [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabel `deelnemers` en de logins in Supabase).
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
