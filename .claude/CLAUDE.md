@@ -57,8 +57,9 @@ Besloten op 18 november 2026, na een mockup:
 
 ## Open punten
 
-- [ ] Supabase afmaken (project `glvrsppggmfksimpfckp`, aangemaakt door Bas via GitHub, 18 november 2026): publishable key in `data.js`, `_supabase/schema.sql` draaien, mailtemplate met `{{ .Token }}`, testen met Bas' eigen adres. Regio nog controleren (EU?).
-- [ ] Eigen SMTP instellen vóór de lancering: de ingebouwde mail van Supabase stuurt alleen naar teamleden, max. 2 per uur. Daarna de limiet (standaard 30/uur) ophogen.
+- [x] Supabase gekoppeld (project `glvrsppggmfksimpfckp`, regio Ierland/eu-west-1, 19 november 2026): schema gedraaid, inloggen met code getest door Bas.
+- [x] Mail via Resend (`noreply@lastscoutstanding.com`, DNS bij Webreus: `resend._domainkey`, `send` → forge.rmta.net, `_dmarc`). Gratis: 3.000/maand, 100/dag. Supabase-mailtemplates "Magic Link" en "Confirm signup" bevatten `{{ .Token }}`.
+- [ ] Rate limit in Supabase (standaard 30 mails/uur) ophogen vóór de aankondiging; aankondiging eventueel spreiden vanwege 100 mails/dag bij Resend.
 - [ ] Gratis project pauzeert na een week zonder activiteit: keep-alive (bijv. GitHub Action) uitzoeken.
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
 - [ ] Privacyverklaring afmaken: contactadres comité, wanneer gegevens gewist worden.
