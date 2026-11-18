@@ -29,7 +29,8 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/privacy.html` | Privacyverklaring, nog concept |
 | `reunie25/speltakken.txt` | Speltakken met instapleeftijd, `opgericht = 2001`; regel zonder leeftijd = rol zonder speltak (Bestuur / vrijwilliger) |
 | `reunie25/reunie.js` | Gedeeld: speltakken.txt inlezen, jaren berekenen, persoonskaartje, `esc()`, jaarvelden-pijltjes |
-| `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. Nu DEMO (localStorage), later Supabase |
+| `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. `SUPABASE_KEY` leeg = DEMO (localStorage), ingevuld = Supabase via `fetch` (geen bibliotheek) |
+| `_supabase/schema.sql` | Tabellen, row level security en functies voor Supabase; één keer draaien in de SQL-editor. Map met `_`, dus niet gepubliceerd |
 | `reunie25/nav.js` | Kop, navigatie, footer en de gele testversie-balk (bij DEMO) |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
 | `reunie25/theme.css` | Stijl; kleuren van scoutingbrandevoort.nl (#2c4696) en het logo (geel). Licht/donker volgt het systeem |
@@ -56,7 +57,9 @@ Besloten op 18 november 2026, na een mockup:
 
 ## Open punten
 
-- [ ] Supabase koppelen in `data.js`: Bas maakt het account/project aan (EU-regio). Tabel + view voor de publieke rij + row level security, inloggen met e-mailcode (OTP). Uitzoeken of eigen SMTP nodig is voor de inlogmails.
+- [ ] Supabase afmaken (project `glvrsppggmfksimpfckp`, aangemaakt door Bas via GitHub, 18 november 2026): publishable key in `data.js`, `_supabase/schema.sql` draaien, mailtemplate met `{{ .Token }}`, testen met Bas' eigen adres. Regio nog controleren (EU?).
+- [ ] Eigen SMTP instellen vóór de lancering: de ingebouwde mail van Supabase stuurt alleen naar teamleden, max. 2 per uur. Daarna de limiet (standaard 30/uur) ophogen.
+- [ ] Gratis project pauzeert na een week zonder activiteit: keep-alive (bijv. GitHub Action) uitzoeken.
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
 - [ ] Privacyverklaring afmaken: contactadres comité, wanneer gegevens gewist worden.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
