@@ -113,10 +113,13 @@ returns void
 language sql security definer set search_path = public
 as $$ delete from auth.users where id = auth.uid(); $$;
 
-revoke all on function public.publieke_deelnemers() from public;
-revoke all on function public.aantal_deelnemers() from public;
-revoke all on function public.verwijder_mij() from public;
-revoke all on function public.is_beheerder() from public;
+-- Supabase grants new functions to anon and authenticated by default: take that away
+-- first, then grant only what each role needs.
+revoke all on function public.publieke_deelnemers() from public, anon, authenticated;
+revoke all on function public.aantal_deelnemers() from public, anon, authenticated;
+revoke all on function public.verwijder_mij() from public, anon, authenticated;
+revoke all on function public.is_beheerder() from public, anon, authenticated;
+revoke all on function public.deelnemers_stempel() from public, anon, authenticated;
 grant execute on function public.publieke_deelnemers() to anon, authenticated;
 grant execute on function public.aantal_deelnemers() to anon, authenticated;
 grant execute on function public.verwijder_mij() to authenticated;
