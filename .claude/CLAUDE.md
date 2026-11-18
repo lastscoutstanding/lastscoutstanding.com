@@ -26,7 +26,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/deelnemers.html` | "Wie komen er?": zoeken, filter speltak + jaar (`?speltak=&jaar=`), tabblad "Per jaar" |
 | `reunie25/programma.html` + `programma.txt` | Programma (`tijd | omschrijving`, andere regels = alinea) |
 | `reunie25/vragen.html` + `vragen.txt` | FAQ (`V:` / `A:`) |
-| `reunie25/privacy.html` | Privacyverklaring, nog concept |
+| `reunie25/privacy.html` | Privacyverklaring (noemt Supabase en Resend, wissen uiterlijk 23 augustus 2027) |
 | `reunie25/speltakken.txt` | Speltakken met instapleeftijd, `opgericht = 2001`; regel zonder leeftijd = rol zonder speltak (Bestuur / vrijwilliger) |
 | `reunie25/reunie.js` | Gedeeld: speltakken.txt inlezen, jaren berekenen, persoonskaartje, `esc()`, jaarvelden-pijltjes |
 | `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. `SUPABASE_KEY` leeg = DEMO (localStorage), ingevuld = Supabase via `fetch` (geen bibliotheek) |
@@ -57,12 +57,13 @@ Besloten op 18 november 2026, na een mockup:
 
 ## Open punten
 
-- [x] Supabase gekoppeld (project `glvrsppggmfksimpfckp`, regio Ierland/eu-west-1, 19 november 2026): schema gedraaid, inloggen met code getest door Bas.
+- [x] Supabase gekoppeld (project `glvrsppggmfksimpfckp`, regio Ierland/eu-west-1, 18 november 2026): schema gedraaid, inloggen met code getest door Bas.
 - [x] Mail via Resend (`noreply@lastscoutstanding.com`, DNS bij Webreus: `resend._domainkey`, `send` → forge.rmta.net, `_dmarc`). Gratis: 3.000/maand, 100/dag. Supabase-mailtemplates "Magic Link" en "Confirm signup" bevatten `{{ .Token }}`.
 - [ ] Rate limit in Supabase (standaard 30 mails/uur) ophogen vóór de aankondiging; aankondiging eventueel spreiden vanwege 100 mails/dag bij Resend.
 - [ ] Gratis project pauzeert na een week zonder activiteit: keep-alive (bijv. GitHub Action) uitzoeken.
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
-- [ ] Privacyverklaring afmaken: contactadres comité, wanneer gegevens gewist worden.
+- [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
+- [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabel `deelnemers` en de logins in Supabase).
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
 - [ ] `README.md` noemt de oude reponaam.
