@@ -30,6 +30,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/speltakken.txt` | Speltakken met instapleeftijd, `opgericht = 2001`; regel zonder leeftijd = rol zonder speltak (Bestuur / vrijwilliger) |
 | `reunie25/reunie.js` | Gedeeld: speltakken.txt inlezen, jaren berekenen, persoonskaartje, `esc()`, jaarvelden-pijltjes |
 | `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. `SUPABASE_KEY` leeg = DEMO (localStorage), ingevuld = Supabase via `fetch` (geen bibliotheek) |
+| `_docs/beheer.md` | Beheerhandleiding: alle instellingen bij GitHub, Webreus (DNS), Resend en Supabase. Bijwerken bij elke wijziging daar |
 | `_supabase/schema.sql` | Tabellen, row level security en functies voor Supabase; één keer draaien in de SQL-editor. Map met `_`, dus niet gepubliceerd |
 | `reunie25/nav.js` | Kop, navigatie, footer en de gele testversie-balk (bij DEMO) |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
