@@ -46,9 +46,18 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - Inlogflow: inschrijven → formulier in sessionStorage → code → pas dan opslaan. E-mailadres nooit in de URL.
 - DEMO: inlogcode `123456`, 20 verzonnen voorbeelddeelnemers, inschrijvingen in localStorage (`reunie25.demo`, sessie `reunie25.sessie`).
 
+## Foto's (gepland)
+
+Besloten op 18 november 2026, na een mockup:
+- Alleen ingelogde deelnemers zien en uploaden foto's; bezoekers krijgen uitleg met inloggen/inschrijven.
+- Nieuwe foto's zijn pas zichtbaar na goedkeuring door het comité (tab "Te beoordelen"); de uploader ziet ze zelf met "wacht op goedkeuring".
+- Per foto: titel, jaar, speltak (filter zoals op "Wie komen er?"), "gedeeld door". Knop "Sta jij hierop…?" verbergt een foto en meldt het aan het comité.
+- Verkleinen in de browser vóór upload: 1600 px (~350 KB) + miniatuur 400 px (~50 KB); opnieuw opslaan haalt ook GPS/EXIF weg. Supabase Free: 1 GB opslag, 5 GB verkeer per maand.
+
 ## Open punten
 
 - [ ] Supabase koppelen in `data.js`: Bas maakt het account/project aan (EU-regio). Tabel + view voor de publieke rij + row level security, inloggen met e-mailcode (OTP). Uitzoeken of eigen SMTP nodig is voor de inlogmails.
+- [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
 - [ ] Privacyverklaring afmaken: contactadres comité, wanneer gegevens gewist worden.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
