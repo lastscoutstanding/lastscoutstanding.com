@@ -69,7 +69,7 @@ Niet aankomen: de records voor GitHub Pages en de drie van Resend. De records va
 | --- | --- |
 | Account | 👤 aangemaakt door Bas |
 | Domein | `lastscoutstanding.com`, geverifieerd 👤 (DNS-records zie Webreus ✅) |
-| Regio | 👤 gevraagd: Ireland (eu-west-1). Controleren in Resend → Domains. |
+| Regio | Ireland (eu-west-1) 👤, bevestigd door Bas |
 | API-sleutel | 👤 alleen "Sending access", staat alleen in Supabase (SMTP-wachtwoord). Nergens anders bewaren. |
 | Gratis limiet | 3.000 mails per maand, **100 per dag** (resend.com/pricing, 18 november 2026) |
 
@@ -83,7 +83,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | --- | --- |
 | Account | 👤 aangemaakt door Bas, inloggen via GitHub |
 | Project | `glvrsppggmfksimpfckp`, URL `https://glvrsppggmfksimpfckp.supabase.co` ✅ |
-| Regio | Ierland (eu-west-1) 👤 |
+| Regio | Ierland (eu-west-1) 👤, bevestigd door Bas |
 | Abonnement | Free: 500 MB database, 1 GB opslag, 5 GB verkeer per maand, 50.000 gebruikers per maand. Geen automatische backups. |
 | Publishable key | `sb_publishable_drDnd…` staat in `reunie25/data.js` ✅. Is openbaar bedoeld. De **secret / service_role key** nooit in de site, de repo of een chat. |
 | Schema | `_supabase/schema.sql` gedraaid in de SQL Editor 👤, rechten gecontroleerd ✅. Mag opnieuw gedraaid worden na wijzigingen. |
