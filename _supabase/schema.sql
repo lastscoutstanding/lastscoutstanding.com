@@ -17,17 +17,23 @@ create table if not exists public.deelnemers (
   email           text not null,
   voornaam        text not null check (char_length(voornaam) between 1 and 60),
   achternaam      text not null default '' check (char_length(achternaam) <= 80),
+  bijnaam         text not null default '' check (char_length(bijnaam) <= 40),
   geboortejaar    int  not null check (geboortejaar between 1930 and 2030),
   -- [{ "speltak": "Welpen", "rol": "lid" | "leiding", "van": 2003, "tot": 2006 | null }]
   takken          jsonb not null default '[]' check (jsonb_typeof(takken) = 'array' and jsonb_array_length(takken) <= 30),
   toon_voornaam   boolean not null default true,
   toon_achternaam boolean not null default false,
+  toon_bijnaam    boolean not null default true,
   toon_leeftijd   boolean not null default true,
   toon_takken     boolean not null default true,
   sinds           date not null default current_date,
   aangemaakt      timestamptz not null default now(),
   bijgewerkt      timestamptz not null default now()
 );
+
+-- Columns added after the first version (no-ops on a fresh install).
+alter table public.deelnemers add column if not exists bijnaam text not null default '' check (char_length(bijnaam) <= 40);
+alter table public.deelnemers add column if not exists toon_bijnaam boolean not null default true;
 
 -- E-mail addresses of comité members. No policies: not readable through the API at all.
 create table if not exists public.beheerders (
@@ -88,16 +94,19 @@ create policy "eigen rij of comite verwijderen" on public.deelnemers
 -- ---------------------------------------------------------------- public functions
 
 -- Everyone who shows at least something, with hidden fields as null. Oldest first.
-create or replace function public.publieke_deelnemers()
-returns table (voornaam text, achternaam text, geboortejaar int, takken jsonb)
+-- Dropped first because the returned columns changed (bijnaam); grants are set again below.
+drop function if exists public.publieke_deelnemers();
+create function public.publieke_deelnemers()
+returns table (voornaam text, achternaam text, bijnaam text, geboortejaar int, takken jsonb)
 language sql stable security definer set search_path = public
 as $$
   select case when toon_voornaam then voornaam end,
          case when toon_achternaam and achternaam <> '' then achternaam end,
+         case when toon_bijnaam and bijnaam <> '' then bijnaam end,
          case when toon_leeftijd then geboortejaar end,
          case when toon_takken and jsonb_array_length(takken) > 0 then takken end
   from deelnemers
-  where toon_voornaam or (toon_achternaam and achternaam <> '') or toon_leeftijd
+  where toon_voornaam or (toon_achternaam and achternaam <> '') or (toon_bijnaam and bijnaam <> '') or toon_leeftijd
      or (toon_takken and jsonb_array_length(takken) > 0)
   order by aangemaakt;
 $$;

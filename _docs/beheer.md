@@ -5,7 +5,7 @@ Werk dit bestand bij als er iets verandert. Geheime sleutels staan hier **nooit*
 
 Legenda: ✅ gecontroleerd (DNS of live site) · 👤 door Bas ingesteld in een dashboard, niet door Claude gezien
 
-Laatst bijgewerkt: 18 november 2026
+Laatst bijgewerkt: 19 november 2026
 
 ---
 
@@ -145,3 +145,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 16 nov 2026 | Repo hernoemd naar lastscoutstanding.com; token uitgebreid naar deze repo |
 | 17 nov 2026 | Reüniesite in `reunie25/` live in demomodus; root stuurt door |
 | 18 nov 2026 | Supabase-project (Ierland), schema, Resend + DNS bij Webreus, SMTP en templates; site live gekoppeld; privacyverklaring af |
+| 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
