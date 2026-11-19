@@ -95,7 +95,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | Inloggen | e-mail met code (OTP), geen wachtwoord. Inschrijven maakt de login aan, inloggen niet. |
 | SMTP | 👤 custom SMTP aan: host `smtp.resend.com`, poort `465`, gebruiker `resend`, wachtwoord = Resend API-sleutel, afzender `noreply@lastscoutstanding.com`, naam `Reünie Scouting Brandevoort` |
 | Mailtemplates | 👤 "Magic Link" en "Confirm signup" bevatten `{{ .Token }}` (de code van 6 cijfers), geen link. Getest door Bas: werkt. |
-| Rate limit mails | standaard 30 per uur. **Nog ophogen** (bijv. 100) vóór de aankondiging: Authentication → Rate Limits. |
+| Rate limit mails | 100 per uur (was standaard 30): Authentication → Rate Limits. Let op: Resend gratis = 100 per dag. |
 
 ### Database (zie `_supabase/schema.sql`)
 
@@ -145,7 +145,8 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 
 ## Terugkerende taken en deadlines
 
-- [ ] Rate limit mails in Supabase ophogen vóór de aankondiging.
+- [x] Rate limit mails in Supabase opgehoogd naar 100 per uur.
+- [ ] Aankondiging eventueel spreiden vanwege max. 100 mails per dag bij Resend.
 - [ ] Overige comité-adressen toevoegen via Beheer → Comité (Bas staat erin).
 - [ ] Bij het wissen na de reünie ook de tabellen `beheerders`, `geblokkeerd`, `verhalen` en `fotos` leegmaken, en de bucket `fotos` legen (Storage → fotos → alles selecteren → Delete).
 - [ ] Opslag van de foto's in de gaten houden (gratis: 1 GB).

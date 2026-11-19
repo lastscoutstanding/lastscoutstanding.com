@@ -81,7 +81,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 
 - [x] Supabase gekoppeld (project `glvrsppggmfksimpfckp`, regio Ierland/eu-west-1, 18 november 2026): schema gedraaid, inloggen met code getest door Bas.
 - [x] Mail via Resend (`noreply@lastscoutstanding.com`, DNS bij Webreus: `resend._domainkey`, `send` → forge.rmta.net, `_dmarc`). Gratis: 3.000/maand, 100/dag. Supabase-mailtemplates "Magic Link" en "Confirm signup" bevatten `{{ .Token }}`.
-- [ ] Rate limit in Supabase (standaard 30 mails/uur) ophogen vóór de aankondiging; aankondiging eventueel spreiden vanwege 100 mails/dag bij Resend.
+- [x] Rate limit mails in Supabase opgehoogd naar 100 per uur (door Bas, gemeld 20 november 2026).
+- [ ] Aankondiging eventueel spreiden: Resend (gratis) verstuurt max. 100 mails per dag, en elke inschrijving of inlog kost een mail.
 - [x] Keep-alive (20 november 2026): GitHub Action `.github/workflows/supabase-keep-alive.yml` roept elke 3 dagen `aantal_deelnemers` aan. GitHub zet geplande workflows uit na 60 dagen zonder activiteit in de repo; dan in het tabblad Actions weer aanzetten. Weghalen na het wissen (augustus 2027).
 - [x] Schema opnieuw gedraaid in Supabase (beheer + betaald), Bas staat in `beheerders` (19 november 2026).
 - [ ] Bedrag en betaallink in `betalen.txt`; nagaan hoe lang de link van de bank geldig blijft.
