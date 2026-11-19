@@ -34,6 +34,8 @@ create table if not exists public.deelnemers (
 -- Columns added after the first version (no-ops on a fresh install).
 alter table public.deelnemers add column if not exists bijnaam text not null default '' check (char_length(bijnaam) <= 40);
 alter table public.deelnemers add column if not exists toon_bijnaam boolean not null default true;
+-- Date the comité saw the payment; null = not paid yet. Only comité members can change it.
+alter table public.deelnemers add column if not exists betaald_op date;
 
 -- E-mail addresses of comité members. No policies: not readable through the API at all.
 create table if not exists public.beheerders (
@@ -57,13 +59,26 @@ create or replace function public.deelnemers_stempel()
 returns trigger
 language plpgsql security definer set search_path = public
 as $$
+declare
+  betaald date := new.betaald_op;
 begin
+  -- No login: SQL editor or table editor in the Supabase dashboard. Trusted, leave as is.
+  if auth.uid() is null then return new; end if;
+  -- Someone else's row: only zet_betaald() (comité) gets here. Change nothing but betaald_op.
+  if tg_op = 'UPDATE' and old.id <> auth.uid() then
+    new := old;
+    new.betaald_op := betaald;
+    new.bijgewerkt := now();
+    return new;
+  end if;
   new.email := auth.jwt() ->> 'email';
   new.bijgewerkt := now();
   if tg_op = 'UPDATE' then
     new.id := old.id; new.sinds := old.sinds; new.aangemaakt := old.aangemaakt;
+    if not public.is_beheerder() then new.betaald_op := old.betaald_op; end if;
   else
     new.sinds := current_date; new.aangemaakt := now();
+    new.betaald_op := null;
   end if;
   return new;
 end;
@@ -122,6 +137,21 @@ returns void
 language sql security definer set search_path = public
 as $$ delete from auth.users where id = auth.uid(); $$;
 
+-- Comité: mark a registration as paid (today) or not paid. Returns the new date or null.
+create or replace function public.zet_betaald(deelnemer uuid, betaald boolean)
+returns date
+language plpgsql security definer set search_path = public
+as $$
+declare
+  datum date;
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
+  update deelnemers set betaald_op = case when betaald then coalesce(betaald_op, current_date) end
+    where id = deelnemer returning betaald_op into datum;
+  return datum;
+end;
+$$;
+
 -- Supabase grants new functions to anon and authenticated by default: take that away
 -- first, then grant only what each role needs.
 revoke all on function public.publieke_deelnemers() from public, anon, authenticated;
@@ -129,10 +159,12 @@ revoke all on function public.aantal_deelnemers() from public, anon, authenticat
 revoke all on function public.verwijder_mij() from public, anon, authenticated;
 revoke all on function public.is_beheerder() from public, anon, authenticated;
 revoke all on function public.deelnemers_stempel() from public, anon, authenticated;
+revoke all on function public.zet_betaald(uuid, boolean) from public, anon, authenticated;
 grant execute on function public.publieke_deelnemers() to anon, authenticated;
 grant execute on function public.aantal_deelnemers() to anon, authenticated;
 grant execute on function public.verwijder_mij() to authenticated;
 grant execute on function public.is_beheerder() to authenticated;
+grant execute on function public.zet_betaald(uuid, boolean) to authenticated;
 
 -- Comité members (add or remove later with insert/delete):
 -- insert into public.beheerders (email) values ('naam@example.com');
