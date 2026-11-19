@@ -45,7 +45,8 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - Logo: `reunie25/logo.svg` (zwarte letters) en `logo-wit.svg` (witte letters, in de blauwe kop; ook favicon via `nav.js`). Omgezet van het originele Illustrator-bestand uit 2011 (`~/Documents/Peter/Scouting Brandevoort/Nieuwe logo/20110503 Definitief/`), een PDF-compatibel `.ai`. macOS rendert dat bestand met een zwarte lelie; de SVG heeft de juiste kleuren (geel #ffe400, rood #fa0000, blauw #495faa).
 - Persoon: voornaam, achternaam, bijnaam (optioneel, max. 40, getoond als Sanne “Snoes” Jansen), e-mail, geboortejaar, `takken: [{speltak, rol: 'lid'|'leiding', van, tot}]` (`tot` null = heden), `toon: {voornaam, achternaam, bijnaam, leeftijd, takken}`, `sinds`.
 - Jeugdlid-jaren worden berekend uit geboortejaar + `speltakken.txt` (je zit in een speltak tot de leeftijd van de volgende), in kalenderjaren, en zijn met de hand aan te passen. Leiding-jaren vult iemand zelf in.
-- Leeftijd = 2027 − geboortejaar (één te hoog voor wie na 23 mei jarig is).
+- Leeftijd = 2027 − geboortejaar, getoond als "58 in 2027" (klopt dus ongeacht de verjaardag).
+- E-mailadressen ziet alleen het comité; `beheer.html` heeft CSV-download en "Kopieer e-mailadressen" (van de gefilterde rijen, voor BCC).
 - Privacy: verborgen velden zijn `null` in de publieke rij (`Data.publiek`). Bij een filter op speltak/jaar verschijnen mensen met verborgen speltakken alleen in het vaste blok "Ook ingeschreven, speltak niet getoond", zodat het filter niets verraadt.
 - Inlogflow: inschrijven → formulier in sessionStorage → code → pas dan opslaan. E-mailadres nooit in de URL.
 - DEMO: inlogcode `123456`, 20 verzonnen voorbeelddeelnemers, inschrijvingen in localStorage (`reunie25.demo`, sessie `reunie25.sessie`). Ingelogd = beheerder; betalingen in `reunie25.demo.betaald`.
