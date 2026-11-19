@@ -166,6 +166,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
 | 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. Schema opnieuw gedraaid, Bas toegevoegd aan `beheerders` ✅ |
 | 19 nov 2026 | Rollen beheerder/hoofdbeheerder, tabblad Comité op Beheer, comitéleden kunnen inloggen zonder inschrijving. Schema opnieuw gedraaid, Bas hoofdbeheerder ✅ |
+| 19 nov 2026 | Opslagregel "fotos bekijken" aangepast: eigen map en comité mogen altijd selecteren, anders bleven bestanden van verwijderde foto's achter. Schema gedraaid, achtergebleven bestanden opgeruimd ✅ |
 | 19 nov 2026 | Foto's bij Herinneringen: bucket `fotos`, tabel `fotos`, beoordelen op Beheer, privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
 | 19 nov 2026 | Herinneringen met verhalen, tabblad Te beoordelen op Beheer, tabel `verhalen`, privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
 | 19 nov 2026 | Verwijderen en blokkeren op Beheer, tabel `geblokkeerd`, label "nieuw". Geen goedkeuring vooraf (besloten na mockup). Schema opnieuw gedraaid ✅ |
