@@ -123,7 +123,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 
 ### Let op bij het gratis abonnement
 
-- Een project **pauzeert na een week zonder activiteit**. De site werkt dan niet tot het project in het dashboard weer wordt aangezet. Oplossing (keep-alive) nog uitzoeken.
+- Een project **pauzeert na een week zonder activiteit**. De site werkt dan niet tot het project in het dashboard weer wordt aangezet. Daarom vraagt een GitHub Action (`.github/workflows/supabase-keep-alive.yml`) elke 3 dagen het aantal inschrijvingen op. Controleren: GitHub → repo → Actions → "Supabase keep-alive" (groene vinkjes). Met "Run workflow" kun je hem met de hand starten. Let op: GitHub zet geplande workflows uit als er 60 dagen niets in de repo is veranderd; dan staat er een melding bij de workflow en zet je hem daar weer aan.
 - Geen backups: af en toe zelf een export maken (Table Editor → `deelnemers` → Export CSV).
 
 ---
@@ -150,7 +150,8 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 - [ ] Bij het wissen na de reünie ook de tabellen `beheerders`, `geblokkeerd`, `verhalen` en `fotos` leegmaken, en de bucket `fotos` legen (Storage → fotos → alles selecteren → Delete).
 - [ ] Opslag van de foto's in de gaten houden (gratis: 1 GB).
 - [ ] GitHub-token vernieuwen vóór ongeveer 30 december 2026.
-- [ ] Keep-alive regelen tegen het pauzeren van Supabase.
+- [x] Keep-alive tegen het pauzeren van Supabase (GitHub Action, 20 nov 2026).
+- [ ] Na het wissen (augustus 2027) de keep-alive-workflow weghalen.
 - [ ] Af en toe een CSV-export van `deelnemers` bewaren.
 - [ ] **Uiterlijk 23 augustus 2027 alle gegevens wissen** (belofte in de privacyverklaring): in Supabase de tabel `deelnemers` leegmaken en onder Authentication → Users alle gebruikers verwijderen. Daarna de site aanpassen (inschrijven dicht).
 
