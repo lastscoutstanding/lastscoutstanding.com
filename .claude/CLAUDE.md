@@ -9,7 +9,7 @@ Stand: 17 november 2026.
 - Werk direct in deze lokale repo. Begin een taak met `git pull`; Bas past soms zelf bestanden aan via GitHub.
 - Eén logische wijziging = één commit. Push pas na akkoord van Bas: de site staat live.
 - Testen via `python3 -m http.server 8000` in de repo-root (config `site` in `.claude/launch.json`), dan `/reunie25/`. De txt-bestanden worden met `fetch` geladen en werken niet via `file://`.
-- Het push-token in de sleutelhanger dekt sinds 16 november 2026 ook deze repo.
+- Het push-token in de sleutelhanger dekt sinds 16 november 2026 ook deze repo. Sinds 20 november 2026 heeft het ook het recht Workflows (nodig voor `.github/workflows/`).
 - Werk dit bestand bij na elke grotere wijziging, vooral "Reünie" en "Open punten".
 
 ## Architectuur
