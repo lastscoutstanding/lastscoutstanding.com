@@ -66,7 +66,7 @@ Besloten op 18 november 2026, na een mockup:
 - [x] Mail via Resend (`noreply@lastscoutstanding.com`, DNS bij Webreus: `resend._domainkey`, `send` → forge.rmta.net, `_dmarc`). Gratis: 3.000/maand, 100/dag. Supabase-mailtemplates "Magic Link" en "Confirm signup" bevatten `{{ .Token }}`.
 - [ ] Rate limit in Supabase (standaard 30 mails/uur) ophogen vóór de aankondiging; aankondiging eventueel spreiden vanwege 100 mails/dag bij Resend.
 - [ ] Gratis project pauzeert na een week zonder activiteit: keep-alive (bijv. GitHub Action) uitzoeken.
-- [ ] Schema opnieuw draaien in Supabase (beheer + betaald), Bas toevoegen aan `beheerders`.
+- [x] Schema opnieuw gedraaid in Supabase (beheer + betaald), Bas staat in `beheerders` (19 november 2026).
 - [ ] Bedrag en betaallink in `betalen.txt`; nagaan hoe lang de link van de bank geldig blijft.
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.

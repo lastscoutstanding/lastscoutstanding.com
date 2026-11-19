@@ -102,7 +102,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | Onderdeel | Wat het doet |
 | --- | --- |
 | tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security). Comité leest alle rijen. Kolom `betaald_op`: datum waarop het comité de betaling zag, alleen te wijzigen door het comité |
-| tabel `beheerders` | e-mailadressen van het comité, niet leesbaar via de site. **Nog leeg.** Toevoegen in de SQL Editor: `insert into public.beheerders (email) values ('naam@example.com');` |
+| tabel `beheerders` | e-mailadressen van het comité, niet leesbaar via de site. Nu alleen Bas (19 nov 2026). Toevoegen in de SQL Editor: `insert into public.beheerders (email) values ('naam@example.com');` |
 | `publieke_deelnemers()` | lijst voor "Wie komen er?", verborgen velden zijn leeg; e-mail komt nooit mee |
 | `aantal_deelnemers()` | totaal aantal inschrijvingen |
 | `verwijder_mij()` | uitschrijven: wist login en inschrijving (alleen ingelogd) |
@@ -135,7 +135,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 ## Terugkerende taken en deadlines
 
 - [ ] Rate limit mails in Supabase ophogen vóór de aankondiging.
-- [ ] Comité-adressen toevoegen aan `beheerders`.
+- [ ] Overige comité-adressen toevoegen aan `beheerders` (Bas staat erin).
 - [ ] GitHub-token vernieuwen vóór ongeveer 30 december 2026.
 - [ ] Keep-alive regelen tegen het pauzeren van Supabase.
 - [ ] Af en toe een CSV-export van `deelnemers` bewaren.
@@ -151,4 +151,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 17 nov 2026 | Reüniesite in `reunie25/` live in demomodus; root stuurt door |
 | 18 nov 2026 | Supabase-project (Ierland), schema, Resend + DNS bij Webreus, SMTP en templates; site live gekoppeld; privacyverklaring af |
 | 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
-| 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. **Schema opnieuw draaien vóór de push** |
+| 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. Schema opnieuw gedraaid, Bas toegevoegd aan `beheerders` ✅ |
