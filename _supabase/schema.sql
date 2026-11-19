@@ -56,9 +56,29 @@ create table if not exists public.geblokkeerd (
   op    date not null default current_date
 );
 
+-- Stories (Herinneringen). Visible to participants once the comité placed them.
+-- status: nieuw (waiting), geplaatst, afgewezen (with toelichting), gemeld (hidden after a report).
+create table if not exists public.verhalen (
+  id          uuid primary key default gen_random_uuid(),
+  auteur      uuid not null references auth.users (id) on delete cascade,
+  titel       text not null check (char_length(titel) between 1 and 80),
+  tekst       text not null check (char_length(tekst) between 1 and 3000),
+  speltak     text check (char_length(speltak) <= 40),
+  jaar        int check (jaar between 1990 and 2030),
+  toon_naam   boolean not null default true,
+  status      text not null default 'nieuw' check (status in ('nieuw', 'geplaatst', 'afgewezen', 'gemeld')),
+  toelichting text check (char_length(toelichting) <= 500),   -- comité to author, on afwijzen
+  melding     text check (char_length(melding) <= 500),       -- reason given by whoever reported it
+  gemeld_door text,
+  gemeld_op   date,
+  aangemaakt  timestamptz not null default now(),
+  bijgewerkt  timestamptz not null default now()
+);
+
 alter table public.deelnemers enable row level security;
 alter table public.beheerders enable row level security;
 alter table public.geblokkeerd enable row level security;
+alter table public.verhalen enable row level security;
 
 -- ---------------------------------------------------------------- helpers
 
@@ -119,6 +139,45 @@ drop trigger if exists deelnemers_stempel on public.deelnemers;
 create trigger deelnemers_stempel before insert or update on public.deelnemers
   for each row execute function public.deelnemers_stempel();
 
+-- Stories: the author can only write content; status and comité fields are set here.
+-- Comité functions set reunie.comite = '1' for their own changes.
+create or replace function public.verhalen_stempel()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  new.bijgewerkt := now();
+  if auth.uid() is null or current_setting('reunie.comite', true) = '1' then return new; end if;
+  if tg_op = 'INSERT' then
+    new.auteur := auth.uid(); new.aangemaakt := now();
+  else
+    new.id := old.id; new.auteur := old.auteur; new.aangemaakt := old.aangemaakt;
+  end if;
+  -- Every new or changed story waits for the comité again.
+  new.status := 'nieuw'; new.toelichting := null;
+  new.melding := null; new.gemeld_door := null; new.gemeld_op := null;
+  return new;
+end;
+$$;
+
+drop trigger if exists verhalen_stempel on public.verhalen;
+create trigger verhalen_stempel before insert or update on public.verhalen
+  for each row execute function public.verhalen_stempel();
+
+-- Display name of the logged-in user for comité notes: voornaam, else e-mail.
+create or replace function public.mijn_naam()
+returns text
+language sql stable security definer set search_path = public
+as $$
+  select coalesce((select nullif(trim(voornaam), '') from deelnemers where id = auth.uid()), auth.jwt() ->> 'email');
+$$;
+
+-- Registered for the reunion, or on the comité: may read and share stories.
+create or replace function public.mag_verhalen()
+returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists (select 1 from deelnemers where id = auth.uid()) or public.is_beheerder(); $$;
+
 -- ---------------------------------------------------------------- row level security
 
 drop policy if exists "eigen rij of comite lezen" on public.deelnemers;
@@ -136,6 +195,22 @@ create policy "eigen rij wijzigen" on public.deelnemers
 drop policy if exists "eigen rij of comite verwijderen" on public.deelnemers;
 create policy "eigen rij of comite verwijderen" on public.deelnemers
   for delete to authenticated using (id = auth.uid() or public.is_beheerder());
+
+drop policy if exists "eigen verhalen lezen" on public.verhalen;
+create policy "eigen verhalen lezen" on public.verhalen
+  for select to authenticated using (auteur = auth.uid());
+
+drop policy if exists "verhaal delen" on public.verhalen;
+create policy "verhaal delen" on public.verhalen
+  for insert to authenticated with check (auteur = auth.uid() and public.mag_verhalen());
+
+drop policy if exists "eigen verhaal wijzigen" on public.verhalen;
+create policy "eigen verhaal wijzigen" on public.verhalen
+  for update to authenticated using (auteur = auth.uid()) with check (auteur = auth.uid());
+
+drop policy if exists "eigen verhaal verwijderen" on public.verhalen;
+create policy "eigen verhaal verwijderen" on public.verhalen
+  for delete to authenticated using (auteur = auth.uid());
 
 -- ---------------------------------------------------------------- public functions
 
@@ -281,6 +356,93 @@ returns boolean
 language sql stable security definer set search_path = public
 as $$ select exists (select 1 from geblokkeerd where email = lower(trim(adres))); $$;
 
+-- Number of placed stories, for the teaser visitors see.
+create or replace function public.aantal_verhalen()
+returns int
+language sql stable security definer set search_path = public
+as $$ select count(*)::int from verhalen where status = 'geplaatst'; $$;
+
+-- Stories for participants: all placed ones plus your own (any status). The author's name
+-- follows what they show on "Wie komen er?", and is left out when toon_naam is off.
+create or replace function public.verhalen_lijst()
+returns table (id uuid, titel text, tekst text, speltak text, jaar int, eigen boolean, status text,
+               toelichting text, toon_naam boolean, voornaam text, bijnaam text, achternaam text, aangemaakt timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  return query
+    select v.id, v.titel, v.tekst, v.speltak, v.jaar, v.auteur = auth.uid(), v.status,
+           case when v.auteur = auth.uid() then v.toelichting end, v.toon_naam,
+           case when v.toon_naam and d.toon_voornaam then d.voornaam end,
+           case when v.toon_naam and d.toon_bijnaam and d.bijnaam <> '' then d.bijnaam end,
+           case when v.toon_naam and d.toon_achternaam and d.achternaam <> '' then d.achternaam end,
+           v.aangemaakt
+    from verhalen v left join deelnemers d on d.id = v.auteur
+    where v.status = 'geplaatst' or v.auteur = auth.uid()
+    order by v.aangemaakt desc;
+end;
+$$;
+
+-- Participant: report a placed story. It is hidden at once and goes to the comité.
+create or replace function public.meld_verhaal(verhaal uuid, reden text default null)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  perform set_config('reunie.comite', '1', true);
+  update verhalen set status = 'gemeld', melding = left(nullif(trim(reden), ''), 500),
+                      gemeld_door = mijn_naam(), gemeld_op = current_date
+    where id = verhaal and status = 'geplaatst';
+end;
+$$;
+
+-- Comité: stories waiting (nieuw) or reported (gemeld), oldest first, with the full author name.
+create or replace function public.te_beoordelen()
+returns table (id uuid, titel text, tekst text, speltak text, jaar int, toon_naam boolean, status text,
+               melding text, gemeld_door text, gemeld_op date, auteur_naam text, aangemaakt timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  return query
+    select v.id, v.titel, v.tekst, v.speltak, v.jaar, v.toon_naam, v.status, v.melding, v.gemeld_door, v.gemeld_op,
+           coalesce(nullif(trim(d.voornaam || ' ' || d.achternaam), ''), u.email::text), v.aangemaakt
+    from verhalen v left join deelnemers d on d.id = v.auteur left join auth.users u on u.id = v.auteur
+    where v.status in ('nieuw', 'gemeld')
+    order by v.aangemaakt;
+end;
+$$;
+
+-- Comité: actie = 'plaatsen', 'afwijzen' (with notitie for the author), 'aanpassen' (nieuwe_titel,
+-- nieuwe_tekst) or 'verwijderen'. Parameter names differ from the columns on purpose.
+create or replace function public.beoordeel_verhaal(verhaal uuid, actie text, notitie text default null,
+                                                    nieuwe_titel text default null, nieuwe_tekst text default null)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  perform set_config('reunie.comite', '1', true);
+  if actie = 'plaatsen' then
+    update verhalen v set status = 'geplaatst', toelichting = null, melding = null, gemeld_door = null, gemeld_op = null
+      where v.id = verhaal;
+  elsif actie = 'afwijzen' then
+    update verhalen v set status = 'afgewezen', toelichting = left(nullif(trim(notitie), ''), 500)
+      where v.id = verhaal;
+  elsif actie = 'aanpassen' then
+    update verhalen v set titel = nieuwe_titel, tekst = nieuwe_tekst where v.id = verhaal;
+  elsif actie = 'verwijderen' then
+    delete from verhalen v where v.id = verhaal;
+  else
+    raise exception 'onbekende actie' using errcode = '22023';
+  end if;
+end;
+$$;
+
 -- Login page: comité members may log in without a registration, so their login is created
 -- on first use. Tells only whether an address is on the comité list.
 create or replace function public.is_comite_adres(adres text)
@@ -306,6 +468,14 @@ revoke all on function public.verwijder_deelnemer(uuid, boolean, text) from publ
 revoke all on function public.geblokkeerde() from public, anon, authenticated;
 revoke all on function public.deblokkeer(text) from public, anon, authenticated;
 revoke all on function public.is_geblokkeerd_adres(text) from public, anon, authenticated;
+revoke all on function public.verhalen_stempel() from public, anon, authenticated;
+revoke all on function public.mijn_naam() from public, anon, authenticated;
+revoke all on function public.mag_verhalen() from public, anon, authenticated;
+revoke all on function public.aantal_verhalen() from public, anon, authenticated;
+revoke all on function public.verhalen_lijst() from public, anon, authenticated;
+revoke all on function public.meld_verhaal(uuid, text) from public, anon, authenticated;
+revoke all on function public.te_beoordelen() from public, anon, authenticated;
+revoke all on function public.beoordeel_verhaal(uuid, text, text, text, text) from public, anon, authenticated;
 grant execute on function public.publieke_deelnemers() to anon, authenticated;
 grant execute on function public.aantal_deelnemers() to anon, authenticated;
 grant execute on function public.verwijder_mij() to authenticated;
@@ -321,6 +491,12 @@ grant execute on function public.verwijder_deelnemer(uuid, boolean, text) to aut
 grant execute on function public.geblokkeerde() to authenticated;
 grant execute on function public.deblokkeer(text) to authenticated;
 grant execute on function public.is_geblokkeerd_adres(text) to anon, authenticated;
+grant execute on function public.mag_verhalen() to authenticated;
+grant execute on function public.aantal_verhalen() to anon, authenticated;
+grant execute on function public.verhalen_lijst() to authenticated;
+grant execute on function public.meld_verhaal(uuid, text) to authenticated;
+grant execute on function public.te_beoordelen() to authenticated;
+grant execute on function public.beoordeel_verhaal(uuid, text, text, text, text) to authenticated;
 
 -- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
 -- Hoofdbeheerders are set here only:
