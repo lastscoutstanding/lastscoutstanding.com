@@ -73,7 +73,7 @@ Besloten op 18 november 2026, na een mockup:
 - [x] Schema opnieuw gedraaid (rollen + comité), Bas hoofdbeheerder (19 november 2026).
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
-- [ ] Schema opnieuw draaien (verwijderen/blokkeren) vóór de push van stap 3.
+- [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabellen `deelnemers`, `beheerders`, `geblokkeerd` en de logins in Supabase).
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
