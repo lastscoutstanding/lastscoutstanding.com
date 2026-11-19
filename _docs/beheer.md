@@ -101,11 +101,14 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 
 | Onderdeel | Wat het doet |
 | --- | --- |
-| tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security) |
+| tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security). Comité leest alle rijen. Kolom `betaald_op`: datum waarop het comité de betaling zag, alleen te wijzigen door het comité |
 | tabel `beheerders` | e-mailadressen van het comité, niet leesbaar via de site. **Nog leeg.** Toevoegen in de SQL Editor: `insert into public.beheerders (email) values ('naam@example.com');` |
 | `publieke_deelnemers()` | lijst voor "Wie komen er?", verborgen velden zijn leeg; e-mail komt nooit mee |
 | `aantal_deelnemers()` | totaal aantal inschrijvingen |
 | `verwijder_mij()` | uitschrijven: wist login en inschrijving (alleen ingelogd) |
+| `zet_betaald()` | comité: betaling afvinken of terugzetten (pagina Beheer) |
+| `is_beheerder()` | bepaalt of iemand de pagina Beheer en de link in het menu krijgt |
+| trigger `deelnemers_stempel` | vult e-mail en datums zelf in; een deelnemer kan `betaald_op` niet zelf veranderen. Wijzigingen in de Table Editor of SQL Editor laat hij met rust |
 
 ### Let op bij het gratis abonnement
 
@@ -120,7 +123,9 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | --- | --- |
 | Reüniesite | `reunie25/`; de root `index.html` stuurt door naar `reunie25/` |
 | Koppeling met Supabase | alleen `reunie25/data.js`. `SUPABASE_KEY` leeg maken = terug naar demomodus (alles in de browser, code `123456`) |
-| Inhoud die je zelf bijhoudt | `reunie25/programma.txt`, `reunie25/vragen.txt`, `reunie25/speltakken.txt` (uitleg bovenin elk bestand) |
+| Inhoud die je zelf bijhoudt | `reunie25/programma.txt`, `reunie25/vragen.txt`, `reunie25/speltakken.txt`, `reunie25/betalen.txt` (uitleg bovenin elk bestand) |
+| Betalen | `reunie25/betalen.txt`: bedrag, betaallink, IBAN. Leeg = geen betaalblok. Verlopen link: nieuwe erin zetten. Het comité vinkt betalingen af op `beheer.html` |
+| Beheer | `reunie25/beheer.html`: alle inschrijvingen, zoeken, details, CSV, betaald afvinken. Alleen voor adressen in `beheerders` |
 | Privacyverklaring | `reunie25/privacy.html`: contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl |
 | Lokaal testen | in de repo: `python3 -m http.server 8000`, dan `http://localhost:8000/reunie25/` (let op: praat met de echte database) |
 | Projectcontext voor Claude | `.claude/CLAUDE.md` |
@@ -146,3 +151,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 17 nov 2026 | Reüniesite in `reunie25/` live in demomodus; root stuurt door |
 | 18 nov 2026 | Supabase-project (Ierland), schema, Resend + DNS bij Webreus, SMTP en templates; site live gekoppeld; privacyverklaring af |
 | 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
+| 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. **Schema opnieuw draaien vóór de push** |
