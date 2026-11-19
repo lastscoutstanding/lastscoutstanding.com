@@ -48,8 +48,17 @@ alter table public.beheerders add column if not exists rol text not null default
 alter table public.beheerders add column if not exists toegevoegd_door text;  -- null = via the SQL editor
 alter table public.beheerders add column if not exists toegevoegd_op date not null default current_date;
 
+-- Addresses the comité removed and blocked: they cannot register again. No policies.
+create table if not exists public.geblokkeerd (
+  email text primary key,          -- lower case
+  reden text,                      -- only for the comité
+  door  text,                      -- who blocked it
+  op    date not null default current_date
+);
+
 alter table public.deelnemers enable row level security;
 alter table public.beheerders enable row level security;
+alter table public.geblokkeerd enable row level security;
 
 -- ---------------------------------------------------------------- helpers
 
@@ -96,6 +105,9 @@ begin
     new.id := old.id; new.sinds := old.sinds; new.aangemaakt := old.aangemaakt;
     if not public.is_beheerder() then new.betaald_op := old.betaald_op; end if;
   else
+    if exists (select 1 from geblokkeerd where email = lower(new.email)) then
+      raise exception 'geblokkeerd' using errcode = '42501';
+    end if;
     new.sinds := current_date; new.aangemaakt := now();
     new.betaald_op := null;
   end if;
@@ -216,6 +228,59 @@ begin
 end;
 $$;
 
+-- Comité: remove a registration and its login, optionally blocking the address.
+-- Not for yourself (that is uitschrijven) and comité addresses cannot be blocked.
+create or replace function public.verwijder_deelnemer(deelnemer uuid, blokkeer boolean default false, waarom text default null)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  adres text;
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
+  if deelnemer = auth.uid() then raise exception 'zelf' using errcode = '22023'; end if;
+  select lower(email) into adres from deelnemers where id = deelnemer;
+  if adres is null then return; end if;
+  if blokkeer then
+    if exists (select 1 from beheerders where lower(email) = adres) then raise exception 'comitélid' using errcode = '22023'; end if;
+    insert into geblokkeerd (email, reden, door)
+      values (adres, nullif(trim(waarom), ''),
+              coalesce((select nullif(trim(voornaam), '') from deelnemers where id = auth.uid()), auth.jwt() ->> 'email'))
+      on conflict (email) do update set reden = excluded.reden, door = excluded.door, op = current_date;
+  end if;
+  delete from auth.users where id = deelnemer;
+end;
+$$;
+
+-- Comité: blocked addresses, newest first.
+create or replace function public.geblokkeerde()
+returns table (email text, reden text, door text, op date)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
+  return query select g.email, g.reden, g.door, g.op from geblokkeerd g order by g.op desc, g.email;
+end;
+$$;
+
+-- Comité: unblock an address.
+create or replace function public.deblokkeer(adres text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
+  delete from geblokkeerd where email = lower(trim(adres));
+end;
+$$;
+
+-- Registration form: a blocked address gets no code. Tells only whether an address is blocked.
+create or replace function public.is_geblokkeerd_adres(adres text)
+returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists (select 1 from geblokkeerd where email = lower(trim(adres))); $$;
+
 -- Login page: comité members may log in without a registration, so their login is created
 -- on first use. Tells only whether an address is on the comité list.
 create or replace function public.is_comite_adres(adres text)
@@ -237,6 +302,10 @@ revoke all on function public.comite() from public, anon, authenticated;
 revoke all on function public.comite_toevoegen(text) from public, anon, authenticated;
 revoke all on function public.comite_weghalen(text) from public, anon, authenticated;
 revoke all on function public.is_comite_adres(text) from public, anon, authenticated;
+revoke all on function public.verwijder_deelnemer(uuid, boolean, text) from public, anon, authenticated;
+revoke all on function public.geblokkeerde() from public, anon, authenticated;
+revoke all on function public.deblokkeer(text) from public, anon, authenticated;
+revoke all on function public.is_geblokkeerd_adres(text) from public, anon, authenticated;
 grant execute on function public.publieke_deelnemers() to anon, authenticated;
 grant execute on function public.aantal_deelnemers() to anon, authenticated;
 grant execute on function public.verwijder_mij() to authenticated;
@@ -248,6 +317,10 @@ grant execute on function public.comite() to authenticated;
 grant execute on function public.comite_toevoegen(text) to authenticated;
 grant execute on function public.comite_weghalen(text) to authenticated;
 grant execute on function public.is_comite_adres(text) to anon, authenticated;
+grant execute on function public.verwijder_deelnemer(uuid, boolean, text) to authenticated;
+grant execute on function public.geblokkeerde() to authenticated;
+grant execute on function public.deblokkeer(text) to authenticated;
+grant execute on function public.is_geblokkeerd_adres(text) to anon, authenticated;
 
 -- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
 -- Hoofdbeheerders are set here only:
