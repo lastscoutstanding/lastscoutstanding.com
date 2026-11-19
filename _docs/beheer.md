@@ -103,6 +103,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | --- | --- |
 | tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security). Comité leest alle rijen. Kolom `betaald_op`: datum waarop het comité de betaling zag, alleen te wijzigen door het comité |
 | tabel `beheerders` | comité: `email`, `rol` (`beheerder` of `hoofdbeheerder`), `toegevoegd_door`, `toegevoegd_op`. Niet direct leesbaar via de site. Gewone beheerders voegt een hoofdbeheerder toe op Beheer → Comité. Hoofdbeheerders alleen in de SQL Editor: `insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder') on conflict (email) do update set rol = 'hoofdbeheerder';` |
+| tabel `geblokkeerd` | adressen die het comité verwijderde en blokkeerde (`email`, `reden`, `door`, `op`). Zo'n adres krijgt geen code meer bij inschrijven en de trigger weigert een nieuwe rij. Deblokkeren op Beheer → Comité |
 | `publieke_deelnemers()` | lijst voor "Wie komen er?", verborgen velden zijn leeg; e-mail komt nooit mee |
 | `aantal_deelnemers()` | totaal aantal inschrijvingen |
 | `verwijder_mij()` | uitschrijven: wist login en inschrijving (alleen ingelogd) |
@@ -110,6 +111,8 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | `is_beheerder()` | bepaalt of iemand de pagina Beheer en de link in het menu krijgt |
 | `mijn_rol()`, `is_hoofdbeheerder()` | rol van wie ingelogd is; hoofdbeheerders zien op Beheer → Comité de knoppen toevoegen/weghalen |
 | `comite()`, `comite_toevoegen()`, `comite_weghalen()` | comitélijst (alleen comité) en gewone beheerders toevoegen/weghalen (alleen hoofdbeheerders) |
+| `verwijder_deelnemer()` | comité: inschrijving + login wissen, eventueel adres blokkeren. Niet voor jezelf; comité-adressen niet blokkeren |
+| `geblokkeerde()`, `deblokkeer()`, `is_geblokkeerd_adres()` | lijst en deblokkeren (comité); de laatste gebruikt het inschrijfformulier en verraadt alleen óf een adres geblokkeerd is |
 | `is_comite_adres()` | inlogpagina: een comitélid zonder inschrijving krijgt toch een code (de login wordt dan aangemaakt). Verraadt alleen óf een adres in het comité zit |
 | trigger `deelnemers_stempel` | vult e-mail en datums zelf in; een deelnemer kan `betaald_op` niet zelf veranderen. Wijzigingen in de Table Editor of SQL Editor laat hij met rust |
 
@@ -128,7 +131,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | Koppeling met Supabase | alleen `reunie25/data.js`. `SUPABASE_KEY` leeg maken = terug naar demomodus (alles in de browser, code `123456`) |
 | Inhoud die je zelf bijhoudt | `reunie25/programma.txt`, `reunie25/vragen.txt`, `reunie25/speltakken.txt`, `reunie25/betalen.txt` (uitleg bovenin elk bestand) |
 | Betalen | `reunie25/betalen.txt`: bedrag, betaallink, IBAN. Leeg = geen betaalblok. Verlopen link: nieuwe erin zetten. Het comité vinkt betalingen af op `beheer.html` |
-| Beheer | `reunie25/beheer.html`: tabblad Inschrijvingen (zoeken, details, CSV, adressen kopiëren, betaald afvinken) en tabblad Comité (`#comite`: lijst, toevoegen/weghalen, "Wie mag wat?"). Alleen voor adressen in `beheerders` |
+| Beheer | `reunie25/beheer.html`: tabblad Inschrijvingen (zoeken, filter incl. "Nieuw deze week", details, verwijderen/blokkeren, CSV, adressen kopiëren, betaald afvinken) en tabblad Comité (`#comite`: lijst, toevoegen/weghalen, geblokkeerde adressen, "Wie mag wat?"). Alleen voor adressen in `beheerders` |
 | Privacyverklaring | `reunie25/privacy.html`: contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl |
 | Lokaal testen | in de repo: `python3 -m http.server 8000`, dan `http://localhost:8000/reunie25/` (let op: praat met de echte database) |
 | Projectcontext voor Claude | `.claude/CLAUDE.md` |
@@ -139,7 +142,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 
 - [ ] Rate limit mails in Supabase ophogen vóór de aankondiging.
 - [ ] Overige comité-adressen toevoegen via Beheer → Comité (Bas staat erin).
-- [ ] Bij het wissen na de reünie ook de tabel `beheerders` leegmaken.
+- [ ] Bij het wissen na de reünie ook de tabellen `beheerders` en `geblokkeerd` leegmaken.
 - [ ] GitHub-token vernieuwen vóór ongeveer 30 december 2026.
 - [ ] Keep-alive regelen tegen het pauzeren van Supabase.
 - [ ] Af en toe een CSV-export van `deelnemers` bewaren.
@@ -157,3 +160,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
 | 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. Schema opnieuw gedraaid, Bas toegevoegd aan `beheerders` ✅ |
 | 19 nov 2026 | Rollen beheerder/hoofdbeheerder, tabblad Comité op Beheer, comitéleden kunnen inloggen zonder inschrijving. Schema opnieuw gedraaid, Bas hoofdbeheerder ✅ |
+| 19 nov 2026 | Verwijderen en blokkeren op Beheer, tabel `geblokkeerd`, label "nieuw". Geen goedkeuring vooraf (besloten na mockup). **Schema opnieuw draaien vóór de push** |
