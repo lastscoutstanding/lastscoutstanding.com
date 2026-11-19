@@ -570,9 +570,14 @@ drop policy if exists "fotos uploaden" on storage.objects;
 create policy "fotos uploaden" on storage.objects
   for insert to authenticated
   with check (bucket_id = 'fotos' and (storage.foldername(name))[1] = auth.uid()::text and public.mag_verhalen());
+-- Storage only deletes files you may also select. The site deletes the row first, so your own
+-- folder (and everything, for the comité) stays selectable without a row; otherwise files of
+-- removed photos would stay behind.
 drop policy if exists "fotos bekijken" on storage.objects;
 create policy "fotos bekijken" on storage.objects
-  for select to authenticated using (bucket_id = 'fotos' and public.foto_zichtbaar(name));
+  for select to authenticated
+  using (bucket_id = 'fotos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_beheerder()
+                                  or public.foto_zichtbaar(name)));
 drop policy if exists "fotos verwijderen" on storage.objects;
 create policy "fotos verwijderen" on storage.objects
   for delete to authenticated
