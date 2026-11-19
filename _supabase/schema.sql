@@ -8,6 +8,8 @@
 --   * Visitors see other participants only through publieke_deelnemers(), which returns
 --     null for every field the person chose to hide. E-mail addresses never leave the database.
 --   * Comité members (table beheerders) get extra rights via is_beheerder().
+--   * A beheerder with rol 'hoofdbeheerder' can also add and remove ordinary beheerders
+--     on the site. Hoofdbeheerders themselves are only set here, in the SQL editor.
 -- This folder starts with "_", so GitHub Pages does not publish it.
 
 -- ---------------------------------------------------------------- tables
@@ -41,6 +43,10 @@ alter table public.deelnemers add column if not exists betaald_op date;
 create table if not exists public.beheerders (
   email text primary key
 );
+alter table public.beheerders add column if not exists rol text not null default 'beheerder'
+  check (rol in ('beheerder', 'hoofdbeheerder'));
+alter table public.beheerders add column if not exists toegevoegd_door text;  -- null = via the SQL editor
+alter table public.beheerders add column if not exists toegevoegd_op date not null default current_date;
 
 alter table public.deelnemers enable row level security;
 alter table public.beheerders enable row level security;
@@ -53,6 +59,19 @@ language sql stable security definer set search_path = public
 as $$
   select exists (select 1 from beheerders where lower(email) = lower(auth.jwt() ->> 'email'));
 $$;
+
+-- Role of the logged-in user: 'beheerder', 'hoofdbeheerder' or null.
+create or replace function public.mijn_rol()
+returns text
+language sql stable security definer set search_path = public
+as $$
+  select rol from beheerders where lower(email) = lower(auth.jwt() ->> 'email') limit 1;
+$$;
+
+create or replace function public.is_hoofdbeheerder()
+returns boolean
+language sql stable security definer set search_path = public
+as $$ select coalesce(public.mijn_rol() = 'hoofdbeheerder', false); $$;
 
 -- Keep email in sync with the login and stamp updates; the client cannot change them.
 create or replace function public.deelnemers_stempel()
@@ -152,6 +171,58 @@ begin
 end;
 $$;
 
+-- Comité: list of comité members, with the name if they registered for the reunion.
+create or replace function public.comite()
+returns table (email text, rol text, toegevoegd_door text, toegevoegd_op date, naam text)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
+  return query
+    select b.email, b.rol, b.toegevoegd_door, b.toegevoegd_op,
+           (select nullif(trim(d.voornaam || ' ' || d.achternaam), '') from deelnemers d
+             where lower(d.email) = lower(b.email) limit 1)
+    from beheerders b
+    order by b.rol desc, b.toegevoegd_op, b.email;
+end;
+$$;
+
+-- Hoofdbeheerder: add an ordinary beheerder. Does nothing if the address is already in the list.
+create or replace function public.comite_toevoegen(adres text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+declare
+  a text := lower(trim(adres));
+begin
+  if not is_hoofdbeheerder() then raise exception 'alleen voor hoofdbeheerders' using errcode = '42501'; end if;
+  if a !~ '^[^[:space:]@]+@[^[:space:]@]+\.[^[:space:]@]+$' then raise exception 'ongeldig e-mailadres' using errcode = '22023'; end if;
+  if exists (select 1 from beheerders where lower(email) = a) then return; end if;
+  insert into beheerders (email, rol, toegevoegd_door)
+    values (a, 'beheerder', coalesce((select nullif(trim(voornaam), '') from deelnemers where id = auth.uid()),
+                                     auth.jwt() ->> 'email'));
+end;
+$$;
+
+-- Hoofdbeheerder: remove an ordinary beheerder. Hoofdbeheerders can only be removed in the SQL editor.
+create or replace function public.comite_weghalen(adres text)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not is_hoofdbeheerder() then raise exception 'alleen voor hoofdbeheerders' using errcode = '42501'; end if;
+  delete from beheerders where lower(email) = lower(trim(adres)) and rol = 'beheerder';
+end;
+$$;
+
+-- Login page: comité members may log in without a registration, so their login is created
+-- on first use. Tells only whether an address is on the comité list.
+create or replace function public.is_comite_adres(adres text)
+returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists (select 1 from beheerders where lower(email) = lower(trim(adres))); $$;
+
 -- Supabase grants new functions to anon and authenticated by default: take that away
 -- first, then grant only what each role needs.
 revoke all on function public.publieke_deelnemers() from public, anon, authenticated;
@@ -160,11 +231,26 @@ revoke all on function public.verwijder_mij() from public, anon, authenticated;
 revoke all on function public.is_beheerder() from public, anon, authenticated;
 revoke all on function public.deelnemers_stempel() from public, anon, authenticated;
 revoke all on function public.zet_betaald(uuid, boolean) from public, anon, authenticated;
+revoke all on function public.mijn_rol() from public, anon, authenticated;
+revoke all on function public.is_hoofdbeheerder() from public, anon, authenticated;
+revoke all on function public.comite() from public, anon, authenticated;
+revoke all on function public.comite_toevoegen(text) from public, anon, authenticated;
+revoke all on function public.comite_weghalen(text) from public, anon, authenticated;
+revoke all on function public.is_comite_adres(text) from public, anon, authenticated;
 grant execute on function public.publieke_deelnemers() to anon, authenticated;
 grant execute on function public.aantal_deelnemers() to anon, authenticated;
 grant execute on function public.verwijder_mij() to authenticated;
 grant execute on function public.is_beheerder() to authenticated;
 grant execute on function public.zet_betaald(uuid, boolean) to authenticated;
+grant execute on function public.mijn_rol() to authenticated;
+grant execute on function public.is_hoofdbeheerder() to authenticated;
+grant execute on function public.comite() to authenticated;
+grant execute on function public.comite_toevoegen(text) to authenticated;
+grant execute on function public.comite_weghalen(text) to authenticated;
+grant execute on function public.is_comite_adres(text) to anon, authenticated;
 
--- Comité members (add or remove later with insert/delete):
--- insert into public.beheerders (email) values ('naam@example.com');
+-- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
+-- Hoofdbeheerders are set here only:
+-- insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder')
+--   on conflict (email) do update set rol = 'hoofdbeheerder';
+-- Removing one: delete from public.beheerders where email = 'naam@example.com';
