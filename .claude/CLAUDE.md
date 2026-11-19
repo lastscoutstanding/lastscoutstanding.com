@@ -86,7 +86,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [ ] Bedrag en betaallink in `betalen.txt`; nagaan hoe lang de link van de bank geldig blijft.
 - [x] Schema opnieuw gedraaid (rollen + comité), Bas hoofdbeheerder (19 november 2026).
 - [x] Schema opnieuw gedraaid (verhalen), 19 november 2026.
-- [ ] Schema opnieuw draaien (foto's, bucket en opslagregels) vóór de push van stap 5; daarna een echte upload testen.
+- [x] Schema opnieuw gedraaid (foto's, bucket en opslagregels), 19 november 2026.
+- [ ] Een echte foto-upload testen (uploaden, bekijken, verwijderen, uitschrijven met foto's).
 - [ ] Menu te vol voor beheerders op laptopbreedte ("Mijn inschrijving" springt naar een tweede regel).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
