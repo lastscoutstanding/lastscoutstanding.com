@@ -24,9 +24,10 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/inloggen.html` | Inloggen met e-mail + code van 6 cijfers (stap `#code`) |
 | `reunie25/mijn.html` | Eigen inschrijving: kaartje, links "wie was er tegelijk met jou", aanpassen, uitschrijven, uitloggen |
 | `reunie25/deelnemers.html` | "Wie komen er?": zoeken, filter speltak + jaar (`?speltak=&jaar=`), tabblad "Per jaar" |
+| `reunie25/herinneringen.html` | Herinneringen (menu na "Wie komen er?"): tabblad Verhalen (lezen, zoeken/filteren, delen, eigen verhaal aanpassen/verwijderen, "Meld het") en Foto's (nog "binnenkort", `#fotos`). Alleen voor deelnemers en comité; anderen zien een teaser met het aantal |
 | `reunie25/programma.html` + `programma.txt` | Programma (`tijd | omschrijving`, andere regels = alinea) |
 | `reunie25/vragen.html` + `vragen.txt` | FAQ (`V:` / `A:`); `{bedrag}` = bedrag uit `betalen.txt`, e-mailadressen worden links |
-| `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: zoeken, filter (betaald / nieuw deze week), details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
+| `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: zoeken, filter (betaald / nieuw deze week), details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Te beoordelen (`#beoordelen`): nieuwe/aangepaste en gemelde verhalen plaatsen, afwijzen (met opmerking), aanpassen, verwijderen. Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
 | `reunie25/betalen.txt` | Bedrag, betaallink, IBAN voor het betaalblok op `mijn.html`; leeg = geen blok |
 | `reunie25/privacy.html` | Privacyverklaring (noemt Supabase en Resend, wissen uiterlijk 23 augustus 2027) |
 | `reunie25/speltakken.txt` | Speltakken met instapleeftijd, `opgericht = 2001`; regel zonder leeftijd = rol zonder speltak (Bestuur / vrijwilliger) |
@@ -55,10 +56,18 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - DEMO: inlogcode `123456`, 20 verzonnen voorbeelddeelnemers, inschrijvingen in localStorage (`reunie25.demo`, sessie `reunie25.sessie`). Ingelogd = beheerder; betalingen in `reunie25.demo.betaald`.
 - Betalen (19 november 2026): vaste betaallink van de bank, geen betaalprovider. Het comité vinkt betalingen af op `beheer.html` (`zet_betaald()`, kolom `betaald_op`); de trigger voorkomt dat een deelnemer zichzelf op betaald zet. Lokaal testen in DEMO: `SUPABASE_KEY` tijdelijk leeg maken, niet committen.
 
+## Verhalen (19 november 2026, na mockup)
+
+- Tabel `verhalen` (titel ≤ 80, tekst ≤ 3000, speltak, jaar, `toon_naam`, `status` nieuw/geplaatst/afgewezen/gemeld). Trigger `verhalen_stempel`: elke nieuwe of aangepaste versie door de schrijver wordt weer `nieuw`; comitéfuncties zetten `reunie.comite = '1'` om dat te omzeilen.
+- Naam bij een verhaal volgt wat iemand op "Wie komen er?" toont; `toon_naam` uit = "gedeeld door een oud-lid".
+- Toon: de controle door het comité niet benadrukken. Schrijver ziet "wordt binnenkort geplaatst" en na insturen "verschijnt zo snel mogelijk". Afgewezen: "niet geplaatst" + opmerking.
+- DEMO: `reunie25.demo.verhalen` met drie voorbeeldverhalen.
+- Verhalen worden met de rest gewist (uiterlijk 23 augustus 2027). Bewaren voor later (boekje/archief) zou toestemming bij het insturen vragen; nog niet besloten.
+
 ## Foto's (gepland)
 
 Besloten op 18 november 2026, na een mockup:
-- Alleen ingelogde deelnemers zien en uploaden foto's; bezoekers krijgen uitleg met inloggen/inschrijven.
+- Komen als tabblad Foto's op `herinneringen.html` (niet meer een aparte `fotos.html`). Alleen ingelogde deelnemers zien en uploaden foto's; bezoekers krijgen uitleg met inloggen/inschrijven.
 - Nieuwe foto's zijn pas zichtbaar na goedkeuring door het comité (tab "Te beoordelen"); de uploader ziet ze zelf met "wacht op goedkeuring".
 - Per foto: titel, jaar, speltak (filter zoals op "Wie komen er?"), "gedeeld door". Knop "Sta jij hierop…?" verbergt een foto en meldt het aan het comité.
 - Verkleinen in de browser vóór upload: 1600 px (~350 KB) + miniatuur 400 px (~50 KB); opnieuw opslaan haalt ook GPS/EXIF weg. Supabase Free: 1 GB opslag, 5 GB verkeer per maand.
@@ -72,10 +81,11 @@ Besloten op 18 november 2026, na een mockup:
 - [x] Schema opnieuw gedraaid in Supabase (beheer + betaald), Bas staat in `beheerders` (19 november 2026).
 - [ ] Bedrag en betaallink in `betalen.txt`; nagaan hoe lang de link van de bank geldig blijft.
 - [x] Schema opnieuw gedraaid (rollen + comité), Bas hoofdbeheerder (19 november 2026).
-- [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
+- [ ] Schema opnieuw draaien (verhalen) vóór de push van stap 4.
+- [ ] Foto's bouwen (tabblad op `herinneringen.html`).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
-- [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabellen `deelnemers`, `beheerders`, `geblokkeerd` en de logins in Supabase).
+- [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen` en de logins in Supabase).
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
 - [ ] `README.md` noemt de oude reponaam.

@@ -104,6 +104,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security). Comité leest alle rijen. Kolom `betaald_op`: datum waarop het comité de betaling zag, alleen te wijzigen door het comité |
 | tabel `beheerders` | comité: `email`, `rol` (`beheerder` of `hoofdbeheerder`), `toegevoegd_door`, `toegevoegd_op`. Niet direct leesbaar via de site. Gewone beheerders voegt een hoofdbeheerder toe op Beheer → Comité. Hoofdbeheerders alleen in de SQL Editor: `insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder') on conflict (email) do update set rol = 'hoofdbeheerder';` |
 | tabel `geblokkeerd` | adressen die het comité verwijderde en blokkeerde (`email`, `reden`, `door`, `op`). Zo'n adres krijgt geen code meer bij inschrijven en de trigger weigert een nieuwe rij. Deblokkeren op Beheer → Comité |
+| tabel `verhalen` | verhalen bij Herinneringen; alleen eigen verhalen direct leesbaar, de rest via functies. Status `nieuw` → comité plaatst of wijst af; `gemeld` = verborgen na een melding |
 | `publieke_deelnemers()` | lijst voor "Wie komen er?", verborgen velden zijn leeg; e-mail komt nooit mee |
 | `aantal_deelnemers()` | totaal aantal inschrijvingen |
 | `verwijder_mij()` | uitschrijven: wist login en inschrijving (alleen ingelogd) |
@@ -113,6 +114,8 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | `comite()`, `comite_toevoegen()`, `comite_weghalen()` | comitélijst (alleen comité) en gewone beheerders toevoegen/weghalen (alleen hoofdbeheerders) |
 | `verwijder_deelnemer()` | comité: inschrijving + login wissen, eventueel adres blokkeren. Niet voor jezelf; comité-adressen niet blokkeren |
 | `geblokkeerde()`, `deblokkeer()`, `is_geblokkeerd_adres()` | lijst en deblokkeren (comité); de laatste gebruikt het inschrijfformulier en verraadt alleen óf een adres geblokkeerd is |
+| `verhalen_lijst()`, `aantal_verhalen()`, `mag_verhalen()`, `meld_verhaal()` | Herinneringen: geplaatste + eigen verhalen voor deelnemers, aantal voor bezoekers, melden |
+| `te_beoordelen()`, `beoordeel_verhaal()` | comité: tabblad Te beoordelen (plaatsen, afwijzen, aanpassen, verwijderen) |
 | `is_comite_adres()` | inlogpagina: een comitélid zonder inschrijving krijgt toch een code (de login wordt dan aangemaakt). Verraadt alleen óf een adres in het comité zit |
 | trigger `deelnemers_stempel` | vult e-mail en datums zelf in; een deelnemer kan `betaald_op` niet zelf veranderen. Wijzigingen in de Table Editor of SQL Editor laat hij met rust |
 
@@ -142,7 +145,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 
 - [ ] Rate limit mails in Supabase ophogen vóór de aankondiging.
 - [ ] Overige comité-adressen toevoegen via Beheer → Comité (Bas staat erin).
-- [ ] Bij het wissen na de reünie ook de tabellen `beheerders` en `geblokkeerd` leegmaken.
+- [ ] Bij het wissen na de reünie ook de tabellen `beheerders`, `geblokkeerd` en `verhalen` leegmaken.
 - [ ] GitHub-token vernieuwen vóór ongeveer 30 december 2026.
 - [ ] Keep-alive regelen tegen het pauzeren van Supabase.
 - [ ] Af en toe een CSV-export van `deelnemers` bewaren.
@@ -160,4 +163,5 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
 | 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. Schema opnieuw gedraaid, Bas toegevoegd aan `beheerders` ✅ |
 | 19 nov 2026 | Rollen beheerder/hoofdbeheerder, tabblad Comité op Beheer, comitéleden kunnen inloggen zonder inschrijving. Schema opnieuw gedraaid, Bas hoofdbeheerder ✅ |
+| 19 nov 2026 | Herinneringen met verhalen, tabblad Te beoordelen op Beheer, tabel `verhalen`, privacyverklaring aangevuld. **Schema opnieuw draaien vóór de push** |
 | 19 nov 2026 | Verwijderen en blokkeren op Beheer, tabel `geblokkeerd`, label "nieuw". Geen goedkeuring vooraf (besloten na mockup). Schema opnieuw gedraaid ✅ |
