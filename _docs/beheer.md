@@ -132,7 +132,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | Inhoud die je zelf bijhoudt | `reunie25/programma.txt`, `reunie25/vragen.txt`, `reunie25/speltakken.txt`, `reunie25/betalen.txt` (uitleg bovenin elk bestand) |
 | Betalen | `reunie25/betalen.txt`: bedrag, betaallink, IBAN. Leeg = geen betaalblok. Verlopen link: nieuwe erin zetten. Het comité vinkt betalingen af op `beheer.html` |
 | Beheer | `reunie25/beheer.html`: tabblad Inschrijvingen (zoeken, filter incl. "Nieuw deze week", details, verwijderen/blokkeren, CSV, adressen kopiëren, betaald afvinken) en tabblad Comité (`#comite`: lijst, toevoegen/weghalen, geblokkeerde adressen, "Wie mag wat?"). Alleen voor adressen in `beheerders` |
-| Privacyverklaring | `reunie25/privacy.html`: contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl |
+| Privacyverklaring | `reunie25/privacy.html`: contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl |
 | Lokaal testen | in de repo: `python3 -m http.server 8000`, dan `http://localhost:8000/reunie25/` (let op: praat met de echte database) |
 | Projectcontext voor Claude | `.claude/CLAUDE.md` |
 
