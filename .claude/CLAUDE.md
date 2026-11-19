@@ -69,7 +69,7 @@ Besloten op 18 november 2026, na een mockup:
 - [ ] Gratis project pauzeert na een week zonder activiteit: keep-alive (bijv. GitHub Action) uitzoeken.
 - [x] Schema opnieuw gedraaid in Supabase (beheer + betaald), Bas staat in `beheerders` (19 november 2026).
 - [ ] Bedrag en betaallink in `betalen.txt`; nagaan hoe lang de link van de bank geldig blijft.
-- [ ] Schema opnieuw draaien (rollen + comité) en Bas hoofdbeheerder maken, vóór de push van stap 2.
+- [x] Schema opnieuw gedraaid (rollen + comité), Bas hoofdbeheerder (19 november 2026).
 - [ ] Foto's bouwen (`fotos.html`); wie het comité is (beheer-e-mailadressen) is nog niet bepaald.
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, info@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabel `deelnemers` en de logins in Supabase).

@@ -156,4 +156,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 18 nov 2026 | Supabase-project (Ierland), schema, Resend + DNS bij Webreus, SMTP en templates; site live gekoppeld; privacyverklaring af |
 | 19 nov 2026 | Kolommen `bijnaam` en `toon_bijnaam`; `publieke_deelnemers()` geeft ook de bijnaam. Schema opnieuw gedraaid vóór de push |
 | 19 nov 2026 | Pagina Beheer, kolom `betaald_op`, functie `zet_betaald()`, aangepaste trigger; betaalblok via `betalen.txt`. Schema opnieuw gedraaid, Bas toegevoegd aan `beheerders` ✅ |
-| 19 nov 2026 | Rollen beheerder/hoofdbeheerder, tabblad Comité op Beheer, comitéleden kunnen inloggen zonder inschrijving. **Schema opnieuw draaien en Bas hoofdbeheerder maken vóór de push** |
+| 19 nov 2026 | Rollen beheerder/hoofdbeheerder, tabblad Comité op Beheer, comitéleden kunnen inloggen zonder inschrijving. Schema opnieuw gedraaid, Bas hoofdbeheerder ✅ |
