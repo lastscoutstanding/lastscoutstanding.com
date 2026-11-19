@@ -498,6 +498,206 @@ grant execute on function public.meld_verhaal(uuid, text) to authenticated;
 grant execute on function public.te_beoordelen() to authenticated;
 grant execute on function public.beoordeel_verhaal(uuid, text, text, text, text) to authenticated;
 
+-- ---------------------------------------------------------------- photos (Herinneringen > Foto's)
+-- Files live in the private Storage bucket "fotos": <auteur>/<id>.jpg (max 1600 px) and
+-- <auteur>/<id>-klein.jpg (400 px), both made in the browser. A row in public.fotos says who
+-- shared it and whether it is placed. Same flow as the stories; max 30 photos per person.
+-- Files are removed by the site through the Storage API (SQL cannot delete them).
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+  values ('fotos', 'fotos', false, 1048576, array['image/jpeg'])
+  on conflict (id) do update set public = false, file_size_limit = 1048576, allowed_mime_types = array['image/jpeg'];
+
+create table if not exists public.fotos (
+  id          uuid primary key default gen_random_uuid(),
+  auteur      uuid not null references auth.users (id) on delete cascade,
+  pad         text not null unique,       -- '<auteur>/<id>' without extension
+  groep       uuid,                       -- photos sent in one go
+  titel       text not null default '' check (char_length(titel) <= 80),
+  speltak     text check (char_length(speltak) <= 40),
+  jaar        int check (jaar between 1990 and 2030),
+  toon_naam   boolean not null default true,
+  breedte     int, hoogte int,
+  status      text not null default 'nieuw' check (status in ('nieuw', 'geplaatst', 'gemeld')),
+  melding     text check (char_length(melding) <= 500),
+  gemeld_door text,
+  gemeld_op   date,
+  aangemaakt  timestamptz not null default now()
+);
+alter table public.fotos enable row level security;
+
+create or replace function public.fotos_stempel()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if auth.uid() is null or current_setting('reunie.comite', true) = '1' then return new; end if;
+  if (select count(*) from fotos where auteur = auth.uid()) >= 30 then
+    raise exception 'max' using errcode = '22023';
+  end if;
+  new.auteur := auth.uid(); new.status := 'nieuw'; new.aangemaakt := now();
+  new.melding := null; new.gemeld_door := null; new.gemeld_op := null;
+  if new.pad not like auth.uid()::text || '/%' then raise exception 'pad' using errcode = '22023'; end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists fotos_stempel on public.fotos;
+create trigger fotos_stempel before insert on public.fotos
+  for each row execute function public.fotos_stempel();
+
+drop policy if exists "eigen fotos lezen" on public.fotos;
+create policy "eigen fotos lezen" on public.fotos
+  for select to authenticated using (auteur = auth.uid());
+drop policy if exists "foto delen" on public.fotos;
+create policy "foto delen" on public.fotos
+  for insert to authenticated with check (auteur = auth.uid() and public.mag_verhalen());
+drop policy if exists "eigen foto verwijderen" on public.fotos;
+create policy "eigen foto verwijderen" on public.fotos
+  for delete to authenticated using (auteur = auth.uid());
+
+-- May the logged-in user see this file? Your own, placed ones (participants) and all (comité).
+create or replace function public.foto_zichtbaar(naam text)
+returns boolean
+language sql stable security definer set search_path = public
+as $$
+  select exists (select 1 from fotos f
+    where naam in (f.pad || '.jpg', f.pad || '-klein.jpg')
+      and (f.auteur = auth.uid() or public.is_beheerder() or (f.status = 'geplaatst' and public.mag_verhalen())));
+$$;
+
+drop policy if exists "fotos uploaden" on storage.objects;
+create policy "fotos uploaden" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'fotos' and (storage.foldername(name))[1] = auth.uid()::text and public.mag_verhalen());
+drop policy if exists "fotos bekijken" on storage.objects;
+create policy "fotos bekijken" on storage.objects
+  for select to authenticated using (bucket_id = 'fotos' and public.foto_zichtbaar(name));
+drop policy if exists "fotos verwijderen" on storage.objects;
+create policy "fotos verwijderen" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'fotos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_beheerder()));
+
+create or replace function public.aantal_fotos()
+returns int
+language sql stable security definer set search_path = public
+as $$ select count(*)::int from fotos where status = 'geplaatst'; $$;
+
+-- Placed photos plus your own, newest first; the name follows "Wie komen er?" like the stories.
+create or replace function public.fotos_lijst()
+returns table (id uuid, pad text, titel text, speltak text, jaar int, eigen boolean, status text,
+               voornaam text, bijnaam text, achternaam text, breedte int, hoogte int, aangemaakt timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  return query
+    select f.id, f.pad, f.titel, f.speltak, f.jaar, f.auteur = auth.uid(), f.status,
+           case when f.toon_naam and d.toon_voornaam then d.voornaam end,
+           case when f.toon_naam and d.toon_bijnaam and d.bijnaam <> '' then d.bijnaam end,
+           case when f.toon_naam and d.toon_achternaam and d.achternaam <> '' then d.achternaam end,
+           f.breedte, f.hoogte, f.aangemaakt
+    from fotos f left join deelnemers d on d.id = f.auteur
+    where f.status = 'geplaatst' or f.auteur = auth.uid()
+    order by f.aangemaakt desc, f.id;
+end;
+$$;
+
+create or replace function public.meld_foto(foto uuid, reden text default null)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  perform set_config('reunie.comite', '1', true);
+  update fotos set status = 'gemeld', melding = left(nullif(trim(reden), ''), 500),
+                   gemeld_door = mijn_naam(), gemeld_op = current_date
+    where id = foto and status = 'geplaatst';
+end;
+$$;
+
+-- Comité: new and reported photos, grouped by upload, oldest first.
+create or replace function public.fotos_te_beoordelen()
+returns table (id uuid, pad text, groep uuid, titel text, speltak text, jaar int, toon_naam boolean, status text,
+               melding text, gemeld_door text, gemeld_op date, auteur_naam text, aangemaakt timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  return query
+    select f.id, f.pad, f.groep, f.titel, f.speltak, f.jaar, f.toon_naam, f.status, f.melding, f.gemeld_door, f.gemeld_op,
+           coalesce(nullif(trim(d.voornaam || ' ' || d.achternaam), ''), u.email::text), f.aangemaakt
+    from fotos f left join deelnemers d on d.id = f.auteur left join auth.users u on u.id = f.auteur
+    where f.status in ('nieuw', 'gemeld')
+    order by f.aangemaakt, f.id;
+end;
+$$;
+
+-- Comité: actie 'plaatsen' or 'verwijderen'. Returns the pad of a removed photo, so the site
+-- can delete its files.
+create or replace function public.beoordeel_foto(foto uuid, actie text)
+returns text
+language plpgsql security definer set search_path = public
+as $$
+declare
+  weg text;
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  perform set_config('reunie.comite', '1', true);
+  if actie = 'plaatsen' then
+    update fotos set status = 'geplaatst', melding = null, gemeld_door = null, gemeld_op = null where id = foto;
+  elsif actie = 'verwijderen' then
+    delete from fotos where id = foto returning pad into weg;
+  else
+    raise exception 'onbekende actie' using errcode = '22023';
+  end if;
+  return weg;
+end;
+$$;
+
+-- Comité: placed photos and the space all photo files take, in bytes.
+create or replace function public.foto_opslag()
+returns table (geplaatst int, bytes bigint)
+language plpgsql stable security definer set search_path = public
+as $$
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  return query select (select count(*)::int from fotos where status = 'geplaatst'),
+                      (select coalesce(sum((o.metadata ->> 'size')::bigint), 0)::bigint from storage.objects o where o.bucket_id = 'fotos');
+end;
+$$;
+
+-- Comité: photo paths of a participant, to delete the files before removing the registration.
+create or replace function public.fotos_van(deelnemer uuid)
+returns setof text
+language plpgsql stable security definer set search_path = public
+as $$
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  return query select pad from fotos where auteur = deelnemer;
+end;
+$$;
+
+revoke all on function public.fotos_stempel() from public, anon, authenticated;
+revoke all on function public.foto_zichtbaar(text) from public, anon, authenticated;
+revoke all on function public.aantal_fotos() from public, anon, authenticated;
+revoke all on function public.fotos_lijst() from public, anon, authenticated;
+revoke all on function public.meld_foto(uuid, text) from public, anon, authenticated;
+revoke all on function public.fotos_te_beoordelen() from public, anon, authenticated;
+revoke all on function public.beoordeel_foto(uuid, text) from public, anon, authenticated;
+revoke all on function public.foto_opslag() from public, anon, authenticated;
+revoke all on function public.fotos_van(uuid) from public, anon, authenticated;
+grant execute on function public.foto_zichtbaar(text) to authenticated;
+grant execute on function public.aantal_fotos() to anon, authenticated;
+grant execute on function public.fotos_lijst() to authenticated;
+grant execute on function public.meld_foto(uuid, text) to authenticated;
+grant execute on function public.fotos_te_beoordelen() to authenticated;
+grant execute on function public.beoordeel_foto(uuid, text) to authenticated;
+grant execute on function public.foto_opslag() to authenticated;
+grant execute on function public.fotos_van(uuid) to authenticated;
+
 -- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
 -- Hoofdbeheerders are set here only:
 -- insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder')
