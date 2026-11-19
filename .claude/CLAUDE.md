@@ -35,7 +35,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. `SUPABASE_KEY` leeg = DEMO (localStorage), ingevuld = Supabase via `fetch` (geen bibliotheek) |
 | `_docs/beheer.md` | Beheerhandleiding: alle instellingen bij GitHub, Webreus (DNS), Resend en Supabase. Bijwerken bij elke wijziging daar |
 | `_supabase/schema.sql` | Tabellen, row level security en functies voor Supabase; één keer draaien in de SQL-editor. Map met `_`, dus niet gepubliceerd |
-| `reunie25/nav.js` | Kop (blauwe band met logo, titel en datum) + lichte menubalk eronder (sticky, actieve pagina geel onderstreept, laatste link rechts als knop), footer, testversie-balk bij DEMO |
+| `reunie25/nav.js` | Kop (blauwe band met logo, titel en datum) + lichte menubalk eronder (sticky, actieve pagina geel onderstreept, "Mijn inschrijving →" / "Inloggen →" vast rechts; onder 760 px één veegbare regel met vervaagde randen en "Mijn →"), footer, testversie-balk bij DEMO |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
 | `reunie25/theme.css` | Stijl; kleuren van scoutingbrandevoort.nl (#2c4696) en het logo (geel). Licht/donker volgt het systeem |
 
@@ -88,7 +88,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (verhalen), 19 november 2026.
 - [x] Schema opnieuw gedraaid (foto's, bucket en opslagregels), 19 november 2026.
 - [ ] Een echte foto-upload testen (uploaden, bekijken, verwijderen, uitschrijven met foto's).
-- [ ] Menu te vol voor beheerders op laptopbreedte ("Mijn inschrijving" springt naar een tweede regel).
+- [x] Menu op telefoon: één veegbare regel in plaats van drie regels (20 november 2026, na mockup).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, de bucket `fotos` en de logins in Supabase).
