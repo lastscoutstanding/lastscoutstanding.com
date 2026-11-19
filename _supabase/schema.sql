@@ -242,7 +242,7 @@ begin
   select lower(email) into adres from deelnemers where id = deelnemer;
   if adres is null then return; end if;
   if blokkeer then
-    if exists (select 1 from beheerders where lower(email) = adres) then raise exception 'comitélid' using errcode = '22023'; end if;
+    if exists (select 1 from beheerders where lower(email) = adres) then raise exception 'comitelid' using errcode = '22023'; end if;
     insert into geblokkeerd (email, reden, door)
       values (adres, nullif(trim(waarom), ''),
               coalesce((select nullif(trim(voornaam), '') from deelnemers where id = auth.uid()), auth.jwt() ->> 'email'))
