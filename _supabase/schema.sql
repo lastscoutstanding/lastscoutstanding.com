@@ -722,6 +722,154 @@ grant execute on function public.foto_opslag() to authenticated;
 grant execute on function public.fotos_van(uuid) to authenticated;
 grant execute on function public.bewerk_foto(uuid, text, text, int) to authenticated;
 
+-- ---------------------------------------------------------------- comité: to review, and overleg
+
+-- Comité: number of stories and photos waiting for a decision (new or reported); 0 for others.
+create or replace function public.aantal_te_beoordelen()
+returns int
+language sql stable security definer set search_path = public
+as $$
+  select case when not is_beheerder() then 0 else
+    (select count(*)::int from verhalen where status in ('nieuw', 'gemeld'))
+    + (select count(*)::int from fotos where status in ('nieuw', 'gemeld')) end;
+$$;
+
+-- Overleg: conversations of the comité, optionally about a participant, story, photo or page.
+-- Only comité members can see or write them. No deleting conversations ("done" is enough);
+-- you can delete your own messages. Wiped with everything else (see the privacy statement).
+create table if not exists public.gesprekken (
+  id          uuid primary key default gen_random_uuid(),
+  titel       text not null check (char_length(titel) between 1 and 80),
+  soort       text not null default 'vrij' check (soort in ('vrij', 'deelnemer', 'verhaal', 'foto', 'pagina')),
+  ref         text check (char_length(ref) <= 100),        -- id of the participant/story/photo, or a page file
+  ref_naam    text check (char_length(ref_naam) <= 120),   -- its name when the conversation started
+  status      text not null default 'open' check (status in ('open', 'hot', 'done')),
+  auteur      uuid references auth.users (id) on delete set null,
+  auteur_naam text,
+  aangemaakt  timestamptz not null default now(),
+  bijgewerkt  timestamptz not null default now()
+);
+alter table public.gesprekken enable row level security;
+
+create table if not exists public.berichten (
+  id          uuid primary key default gen_random_uuid(),
+  gesprek     uuid not null references public.gesprekken (id) on delete cascade,
+  auteur      uuid references auth.users (id) on delete set null,
+  auteur_naam text,
+  tekst       text not null check (char_length(tekst) between 1 and 1000),
+  systeem     boolean not null default false,              -- "Bas zette de status op hot"
+  aangemaakt  timestamptz not null default now()
+);
+alter table public.berichten enable row level security;
+create index if not exists berichten_gesprek on public.berichten (gesprek, aangemaakt);
+
+-- Author, name and times are set here, not by the site. After the start only the status can
+-- change; a change adds a line to the conversation.
+create or replace function public.gesprekken_stempel()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if tg_op = 'INSERT' then
+    new.auteur := auth.uid(); new.auteur_naam := mijn_naam();
+    new.aangemaakt := now(); new.bijgewerkt := now();
+    return new;
+  end if;
+  new.id := old.id; new.titel := old.titel; new.soort := old.soort; new.ref := old.ref; new.ref_naam := old.ref_naam;
+  new.auteur := old.auteur; new.auteur_naam := old.auteur_naam; new.aangemaakt := old.aangemaakt;
+  if new.status is distinct from old.status then
+    new.bijgewerkt := now();
+    perform set_config('reunie.systeem', '1', true);
+    insert into berichten (gesprek, tekst) values (old.id, 'zette de status op ' || new.status);
+    perform set_config('reunie.systeem', '', true);
+  end if;
+  return new;
+end;
+$$;
+
+drop trigger if exists gesprekken_stempel on public.gesprekken;
+create trigger gesprekken_stempel before insert or update on public.gesprekken
+  for each row execute function public.gesprekken_stempel();
+
+create or replace function public.berichten_stempel()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  new.auteur := auth.uid(); new.auteur_naam := mijn_naam(); new.aangemaakt := now();
+  new.systeem := coalesce(current_setting('reunie.systeem', true), '') = '1';
+  return new;
+end;
+$$;
+
+drop trigger if exists berichten_stempel on public.berichten;
+create trigger berichten_stempel before insert on public.berichten
+  for each row execute function public.berichten_stempel();
+
+-- A new message moves the conversation up the list.
+create or replace function public.berichten_na()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not new.systeem then update gesprekken set bijgewerkt = now() where id = new.gesprek; end if;
+  return null;
+end;
+$$;
+
+drop trigger if exists berichten_na on public.berichten;
+create trigger berichten_na after insert on public.berichten
+  for each row execute function public.berichten_na();
+
+drop policy if exists "comite leest gesprekken" on public.gesprekken;
+create policy "comite leest gesprekken" on public.gesprekken
+  for select to authenticated using (public.is_beheerder());
+drop policy if exists "comite start gesprek" on public.gesprekken;
+create policy "comite start gesprek" on public.gesprekken
+  for insert to authenticated with check (public.is_beheerder());
+drop policy if exists "comite zet status" on public.gesprekken;
+create policy "comite zet status" on public.gesprekken
+  for update to authenticated using (public.is_beheerder()) with check (public.is_beheerder());
+
+drop policy if exists "comite leest berichten" on public.berichten;
+create policy "comite leest berichten" on public.berichten
+  for select to authenticated using (public.is_beheerder());
+drop policy if exists "comite schrijft bericht" on public.berichten;
+create policy "comite schrijft bericht" on public.berichten
+  for insert to authenticated with check (public.is_beheerder());
+drop policy if exists "eigen bericht verwijderen" on public.berichten;
+create policy "eigen bericht verwijderen" on public.berichten
+  for delete to authenticated using (auteur = auth.uid() and not systeem and public.is_beheerder());
+
+-- Start a conversation with its first message in one go. Returns the new id.
+create or replace function public.start_gesprek(titel text, soort text default 'vrij', ref text default null,
+                                                ref_naam text default null, status text default 'open', tekst text default null)
+returns uuid
+language plpgsql security definer set search_path = public
+as $$
+declare
+  nieuw uuid;
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  insert into gesprekken (titel, soort, ref, ref_naam, status)
+    values (left(trim(start_gesprek.titel), 80), coalesce(start_gesprek.soort, 'vrij'), start_gesprek.ref,
+            left(start_gesprek.ref_naam, 120), coalesce(start_gesprek.status, 'open'))
+    returning id into nieuw;
+  if nullif(trim(start_gesprek.tekst), '') is not null then
+    insert into berichten (gesprek, tekst) values (nieuw, left(trim(start_gesprek.tekst), 1000));
+  end if;
+  return nieuw;
+end;
+$$;
+
+revoke all on function public.aantal_te_beoordelen() from public, anon, authenticated;
+revoke all on function public.gesprekken_stempel() from public, anon, authenticated;
+revoke all on function public.berichten_stempel() from public, anon, authenticated;
+revoke all on function public.berichten_na() from public, anon, authenticated;
+revoke all on function public.start_gesprek(text, text, text, text, text, text) from public, anon, authenticated;
+grant execute on function public.aantal_te_beoordelen() to authenticated;
+grant execute on function public.start_gesprek(text, text, text, text, text, text) to authenticated;
+
 -- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
 -- Hoofdbeheerders are set here only:
 -- insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder')
