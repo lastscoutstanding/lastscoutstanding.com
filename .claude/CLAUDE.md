@@ -72,7 +72,8 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 ## Overleg (gebouwd 20 november 2026, na mockup)
 
 - Comité-chat op Beheer → Overleg. Tabellen `gesprekken` (titel, soort vrij/deelnemer/verhaal/foto/pagina, `ref` + `ref_naam`, status open/hot/done) en `berichten` (≤ 1000 tekens, `systeem` = "X zette de status op hot"). Alleen voor beheerders (row level security). Starten via `start_gesprek()`; triggers vullen auteur, naam (`mijn_naam()`) en tijden in, en na de start kan alleen de status veranderen.
-- Iedereen in het comité mag de status wijzigen. Gesprekken verwijderen kan niet ("done" is genoeg); je eigen bericht wel, aanpassen niet. Een gesprek over een verwijderde deelnemer blijft staan met "(verwijderd)".
+- Iedereen in het comité mag de status wijzigen. Een gesprek verwijderen (met alle berichten) mag wie het startte, en een hoofdbeheerder elk gesprek (21 november 2026, eerst kon het niet). Je eigen bericht verwijderen mag, aanpassen niet. Een gesprek over een verwijderde deelnemer blijft staan met "(verwijderd)".
+- Knopje bij een item telt alleen lopende gesprekken (niet done): geen = "💬 Bespreek"; één = link "💬 Overleg *status*"; meer = "💬 N gesprekken" naar `beheer.html?over=<soort>:<ref>#overleg` (lijst gefilterd op dat item, "alles tonen" haalt het filter weg). Bij één of meer staat er een "+" naast voor een nieuw gesprek over hetzelfde item.
 - Geen mail en niet live. Gele stip = nieuwe berichten van anderen sinds je het gesprek voor het laatst opende (localStorage `reunie25.overleg.gezien`).
 - Bolletjes: geel bij "Beheer" in het menu en bij "Te beoordelen" = foto's en verhalen die wachten (`aantal_te_beoordelen()`); rood bij "Overleg" = aantal op hot. Hot telt bewust niet mee in het menu, omdat gesprekken lang op hot kunnen staan.
 - DEMO: `reunie25.demo.overleg` met twee voorbeeldgesprekken.
@@ -110,6 +111,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
+- [ ] Schema opnieuw draaien (gesprek verwijderen), 21 november 2026: nodig vóór de push.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [x] Jaarvelden-pijltjes werken in Safari (getest door Bas, 20 november 2026). Keuzelijsten hebben een eigen stijl (`appearance: none`), in Safari nog nakijken.
 - [ ] `README.md` noemt de oude reponaam.
