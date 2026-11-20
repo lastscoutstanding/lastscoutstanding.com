@@ -111,7 +111,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
-- [ ] Schema opnieuw draaien (gesprek verwijderen), 21 november 2026: nodig vóór de push.
+- [x] Schema opnieuw gedraaid (gesprek verwijderen), 21 november 2026.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [x] Jaarvelden-pijltjes werken in Safari (getest door Bas, 20 november 2026). Keuzelijsten hebben een eigen stijl (`appearance: none`), in Safari nog nakijken.
 - [ ] `README.md` noemt de oude reponaam.
