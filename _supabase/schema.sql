@@ -735,8 +735,8 @@ as $$
 $$;
 
 -- Overleg: conversations of the comité, optionally about a participant, story, photo or page.
--- Only comité members can see or write them. No deleting conversations ("done" is enough);
--- you can delete your own messages. Wiped with everything else (see the privacy statement).
+-- Only comité members can see or write them. Whoever started a conversation can delete it
+-- (a hoofdbeheerder any); you can delete your own messages. Wiped with everything else (see the privacy statement).
 create table if not exists public.gesprekken (
   id          uuid primary key default gen_random_uuid(),
   titel       text not null check (char_length(titel) between 1 and 80),
@@ -830,6 +830,10 @@ create policy "comite start gesprek" on public.gesprekken
 drop policy if exists "comite zet status" on public.gesprekken;
 create policy "comite zet status" on public.gesprekken
   for update to authenticated using (public.is_beheerder()) with check (public.is_beheerder());
+
+drop policy if exists "eigen gesprek verwijderen" on public.gesprekken;
+create policy "eigen gesprek verwijderen" on public.gesprekken
+  for delete to authenticated using ((auteur = auth.uid() and public.is_beheerder()) or public.is_hoofdbeheerder());
 
 drop policy if exists "comite leest berichten" on public.berichten;
 create policy "comite leest berichten" on public.berichten
