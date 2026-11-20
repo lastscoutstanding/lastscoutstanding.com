@@ -109,7 +109,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
-- [ ] Schema opnieuw draaien (overleg + `aantal_te_beoordelen`), 20 november 2026: nodig vóór de push van Overleg.
+- [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
 - [ ] `README.md` noemt de oude reponaam.
