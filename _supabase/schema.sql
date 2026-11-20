@@ -685,6 +685,23 @@ begin
 end;
 $$;
 
+-- Uploader or comité: change the title, speltak and year of a photo. The photo itself stays
+-- the same, so it keeps its status (no new review).
+create or replace function public.bewerk_foto(foto uuid, titel text, speltak text, jaar int)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (select 1 from fotos f where f.id = foto and (f.auteur = auth.uid() or is_beheerder())) then
+    raise exception 'geen toegang' using errcode = '42501';
+  end if;
+  update fotos f set titel = left(coalesce(trim(bewerk_foto.titel), ''), 80),
+                     speltak = nullif(trim(bewerk_foto.speltak), ''),
+                     jaar = bewerk_foto.jaar
+    where f.id = foto;
+end;
+$$;
+
 revoke all on function public.fotos_stempel() from public, anon, authenticated;
 revoke all on function public.foto_zichtbaar(text) from public, anon, authenticated;
 revoke all on function public.aantal_fotos() from public, anon, authenticated;
@@ -694,6 +711,7 @@ revoke all on function public.fotos_te_beoordelen() from public, anon, authentic
 revoke all on function public.beoordeel_foto(uuid, text) from public, anon, authenticated;
 revoke all on function public.foto_opslag() from public, anon, authenticated;
 revoke all on function public.fotos_van(uuid) from public, anon, authenticated;
+revoke all on function public.bewerk_foto(uuid, text, text, int) from public, anon, authenticated;
 grant execute on function public.foto_zichtbaar(text) to authenticated;
 grant execute on function public.aantal_fotos() to anon, authenticated;
 grant execute on function public.fotos_lijst() to authenticated;
@@ -702,6 +720,7 @@ grant execute on function public.fotos_te_beoordelen() to authenticated;
 grant execute on function public.beoordeel_foto(uuid, text) to authenticated;
 grant execute on function public.foto_opslag() to authenticated;
 grant execute on function public.fotos_van(uuid) to authenticated;
+grant execute on function public.bewerk_foto(uuid, text, text, int) to authenticated;
 
 -- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
 -- Hoofdbeheerders are set here only:
