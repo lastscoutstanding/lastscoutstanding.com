@@ -19,7 +19,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | Pad | Rol |
 | --- | --- |
 | `index.html` | Stuurt door naar `reunie25/` (meta refresh). Vervangen als de root iets anders moet worden |
-| `reunie25/index.html` | Home: datum, aftelling, aantal inschrijvingen, een paar namen |
+| `reunie25/index.html` | Home: datum, aftelling, aantal inschrijvingen, een paar namen, "Nieuw bij Herinneringen" (nieuwste geplaatste verhaal en foto voor deelnemers, links naar `herinneringen.html#verhaal-<id>` / `#foto-<id>`; anderen een teaser met aantallen) |
 | `reunie25/inschrijven.html` | Inschrijven; ingelogd = gegevens aanpassen |
 | `reunie25/inloggen.html` | Inloggen met e-mail + code van 6 cijfers (stap `#code`) |
 | `reunie25/mijn.html` | Eigen inschrijving: kaartje, links "wie was er tegelijk met jou", aanpassen, uitschrijven, uitloggen |
@@ -77,6 +77,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - Verkleinen in de browser vóór upload: 1600 px (~200–350 KB) + miniatuur 400 px (~50 KB); opnieuw opslaan haalt ook GPS/EXIF weg. Supabase Free: 1 GB opslag, 5 GB verkeer per maand. Max. 30 foto's per persoon (trigger `fotos_stempel`).
 - Opslag: privé-bucket `fotos` (alleen JPEG, max. 1 MB), bestanden `<auteur>/<id>.jpg` en `-klein.jpg`; tabel `fotos` met status nieuw/geplaatst/gemeld. Bekijken via ondertekende links (1 uur geldig). Bestanden wist de site via de Storage API (ook bij uitschrijven en bij verwijderen door het comité); SQL kan dat niet.
 - Afwijzen = de foto wordt gewist (geen "niet geplaatst" zoals bij verhalen).
+- Aanpassen (20 november 2026): uploader en comité wijzigen titel, speltak en jaar in de grote weergave (`bewerk_foto()`). Geen nieuwe beoordeling, want de foto zelf verandert niet. Een andere foto = verwijderen en opnieuw delen, en die gaat wel langs het comité.
 - DEMO: rijen in `reunie25.demo.fotos`, geüploade bestanden alleen in het geheugen (na herladen een gekleurd vlak).
 - Let op bij testen: een browsertabblad op de achtergrond kan het verkleinen pauzeren.
 
@@ -92,6 +93,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (rollen + comité), Bas hoofdbeheerder (19 november 2026).
 - [x] Schema opnieuw gedraaid (verhalen), 19 november 2026.
 - [x] Schema opnieuw gedraaid (foto's, bucket en opslagregels), 19 november 2026.
+- [ ] Schema opnieuw draaien (`bewerk_foto`), nodig voor "Aanpassen" bij foto's (20 november 2026).
 - [ ] Een echte foto-upload testen (uploaden, bekijken, verwijderen, uitschrijven met foto's).
 - [x] Menu op telefoon: één veegbare regel in plaats van drie regels (20 november 2026, na mockup).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
