@@ -27,7 +27,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/herinneringen.html` | Herinneringen (menu na "Wie komen er?"): tabblad Verhalen (lezen, zoeken/filteren, delen, eigen verhaal aanpassen/verwijderen, "Meld het") en Foto's (`#fotos`: grid, groot bekijken met pijltjes/vegen, meerdere tegelijk delen, eigen foto verwijderen, "Meld het"). Alleen voor deelnemers en comité; anderen zien een teaser met het aantal |
 | `reunie25/programma.html` + `programma.txt` | Programma (`tijd | omschrijving`, andere regels = alinea) |
 | `reunie25/vragen.html` + `vragen.txt` | FAQ (`V:` / `A:`); `{bedrag}` = bedrag uit `betalen.txt`, e-mailadressen worden links |
-| `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: zoeken, filter (betaald / nieuw deze week), details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Te beoordelen (`#beoordelen`): foto's per inzending (plaatsen / afwijzen = wissen, "Alle N plaatsen"), opslaggebruik, en nieuwe/aangepaste en gemelde verhalen plaatsen, afwijzen (met opmerking), aanpassen, verwijderen. Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
+| `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: zoeken, filter (betaald / nieuw deze week), details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Te beoordelen (`#beoordelen`): foto's per inzending (plaatsen / afwijzen = wissen, "Alle N plaatsen"), opslaggebruik, en nieuwe/aangepaste en gemelde verhalen plaatsen, afwijzen (met opmerking), aanpassen, verwijderen. Tabblad Overleg (`#overleg`, `#overleg-<id>`): comité-chat, zie "Overleg". Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
 | `reunie25/betalen.txt` | Bedrag, betaallink, IBAN voor het betaalblok op `mijn.html`; leeg = geen blok |
 | `reunie25/over.html` | "Over deze site" (link in de footer): gemaakt door Peter (“Peter Limonade”) en Claude samen; tijdens gebruik kijkt geen AI mee |
 | `reunie25/privacy.html` | Privacyverklaring (noemt Supabase en Resend, wissen uiterlijk 23 augustus 2027) |
@@ -39,6 +39,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `_supabase/schema.sql` | Tabellen, row level security en functies voor Supabase; één keer draaien in de SQL-editor. Map met `_`, dus niet gepubliceerd |
 | `reunie25/nav.js` | Kop (blauwe band met logo, titel en datum) + lichte menubalk eronder (sticky, actieve pagina geel onderstreept, "Mijn inschrijving →" / "Inloggen →" vast rechts; onder 760 px één veegbare regel met vervaagde randen en "Mijn →"), footer, testversie-balk bij DEMO |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
+| `reunie25/overleg.js` | Overleg-knopjes (💬) voor het comité bij deelnemers, verhalen, foto's en onderaan elke pagina, en de dialoog "Nieuw overleg". Herinneringen en Beheer laden het zelf; op andere pagina's laadt `nav.js` het voor comitéleden |
 | `reunie25/theme.css` | Stijl; kleuren van scoutingbrandevoort.nl (#2c4696) en het logo (geel). Licht/donker volgt het systeem |
 
 ## Reünie
@@ -67,6 +68,15 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - Toon: de controle door het comité niet benadrukken. Schrijver ziet "wordt binnenkort geplaatst" en na insturen "verschijnt zo snel mogelijk". Afgewezen: "niet geplaatst" + opmerking.
 - DEMO: `reunie25.demo.verhalen` met drie voorbeeldverhalen.
 - Verhalen worden met de rest gewist (uiterlijk 23 augustus 2027). Bewaren voor later (boekje/archief) zou toestemming bij het insturen vragen; nog niet besloten.
+
+## Overleg (gebouwd 20 november 2026, na mockup)
+
+- Comité-chat op Beheer → Overleg. Tabellen `gesprekken` (titel, soort vrij/deelnemer/verhaal/foto/pagina, `ref` + `ref_naam`, status open/hot/done) en `berichten` (≤ 1000 tekens, `systeem` = "X zette de status op hot"). Alleen voor beheerders (row level security). Starten via `start_gesprek()`; triggers vullen auteur, naam (`mijn_naam()`) en tijden in, en na de start kan alleen de status veranderen.
+- Iedereen in het comité mag de status wijzigen. Gesprekken verwijderen kan niet ("done" is genoeg); je eigen bericht wel, aanpassen niet. Een gesprek over een verwijderde deelnemer blijft staan met "(verwijderd)".
+- Geen mail en niet live. Gele stip = nieuwe berichten van anderen sinds je het gesprek voor het laatst opende (localStorage `reunie25.overleg.gezien`).
+- Bolletjes: geel bij "Beheer" in het menu en bij "Te beoordelen" = foto's en verhalen die wachten (`aantal_te_beoordelen()`); rood bij "Overleg" = aantal op hot. Hot telt bewust niet mee in het menu, omdat gesprekken lang op hot kunnen staan.
+- DEMO: `reunie25.demo.overleg` met twee voorbeeldgesprekken.
+- Wordt met de rest gewist (uiterlijk 23 augustus 2027), met de hand; staat in de privacyverklaring.
 
 ## Foto's (gebouwd 19 november 2026)
 
@@ -98,7 +108,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Menu op telefoon: één veegbare regel in plaats van drie regels (20 november 2026, na mockup).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
-- [ ] Gegevens wissen uiterlijk 23 augustus 2027 (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, de bucket `fotos` en de logins in Supabase).
+- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
+- [ ] Schema opnieuw draaien (overleg + `aantal_te_beoordelen`), 20 november 2026: nodig vóór de push van Overleg.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [ ] Jaarvelden-pijltjes niet getest in Safari.
 - [ ] `README.md` noemt de oude reponaam.
