@@ -874,6 +874,73 @@ revoke all on function public.start_gesprek(text, text, text, text, text, text) 
 grant execute on function public.aantal_te_beoordelen() to authenticated;
 grant execute on function public.start_gesprek(text, text, text, text, text, text) to authenticated;
 
+-- ---------------------------------------------------------------- hartjes
+
+-- Hearts on placed stories and photos: one per participant per item, not on your own.
+-- Nobody reads the table directly: hartjes() gives counts only, never who gave them.
+-- Goes with the story or photo, and with the login. Wiped with everything else.
+create table if not exists public.hartjes (
+  verhaal     uuid references public.verhalen (id) on delete cascade,
+  foto        uuid references public.fotos (id) on delete cascade,
+  auteur      uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  aangemaakt  timestamptz not null default now(),
+  check (num_nonnulls(verhaal, foto) = 1)
+);
+create unique index if not exists hartjes_verhaal on public.hartjes (verhaal, auteur) where verhaal is not null;
+create unique index if not exists hartjes_foto on public.hartjes (foto, auteur) where foto is not null;
+alter table public.hartjes enable row level security;
+revoke all on table public.hartjes from anon, authenticated;
+
+-- Per item with hearts: the count, whether one is yours, and whether the item is yours.
+create or replace function public.hartjes()
+returns table (soort text, ref uuid, aantal int, van_mij boolean, eigen boolean)
+language plpgsql stable security definer set search_path = public
+as $$
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  return query
+    select 'verhaal'::text, h.verhaal, count(*)::int, bool_or(h.auteur = auth.uid()), bool_or(v.auteur = auth.uid())
+      from hartjes h join verhalen v on v.id = h.verhaal where v.status = 'geplaatst' group by h.verhaal
+    union all
+    select 'foto'::text, h.foto, count(*)::int, bool_or(h.auteur = auth.uid()), bool_or(f.auteur = auth.uid())
+      from hartjes h join fotos f on f.id = h.foto where f.status = 'geplaatst' group by h.foto;
+end;
+$$;
+
+-- Give (aan) or take back a heart on a placed story or photo of someone else. Returns the new count.
+create or replace function public.zet_hartje(soort text, ref uuid, aan boolean)
+returns int
+language plpgsql security definer set search_path = public
+as $$
+declare n int;
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  if soort = 'verhaal' then
+    if not exists (select 1 from verhalen v where v.id = ref and v.status = 'geplaatst' and v.auteur <> auth.uid()) then
+      raise exception 'niet mogelijk' using errcode = '42501';
+    end if;
+    if aan then insert into hartjes (verhaal) values (ref) on conflict (verhaal, auteur) where verhaal is not null do nothing;
+    else delete from hartjes h where h.verhaal = ref and h.auteur = auth.uid(); end if;
+    select count(*)::int into n from hartjes h where h.verhaal = ref;
+  elsif soort = 'foto' then
+    if not exists (select 1 from fotos f where f.id = ref and f.status = 'geplaatst' and f.auteur <> auth.uid()) then
+      raise exception 'niet mogelijk' using errcode = '42501';
+    end if;
+    if aan then insert into hartjes (foto) values (ref) on conflict (foto, auteur) where foto is not null do nothing;
+    else delete from hartjes h where h.foto = ref and h.auteur = auth.uid(); end if;
+    select count(*)::int into n from hartjes h where h.foto = ref;
+  else
+    raise exception 'onbekende soort' using errcode = '22023';
+  end if;
+  return n;
+end;
+$$;
+
+revoke all on function public.hartjes() from public, anon, authenticated;
+revoke all on function public.zet_hartje(text, uuid, boolean) from public, anon, authenticated;
+grant execute on function public.hartjes() to authenticated;
+grant execute on function public.zet_hartje(text, uuid, boolean) to authenticated;
+
 -- Comité members: hoofdbeheerders add ordinary beheerders on the site (Beheer > Comité).
 -- Hoofdbeheerders are set here only:
 -- insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder')

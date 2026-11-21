@@ -24,7 +24,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/inloggen.html` | Inloggen met e-mail + code van 6 cijfers (stap `#code`) |
 | `reunie25/mijn.html` | Eigen inschrijving: kaartje, links "wie was er tegelijk met jou", aanpassen, uitschrijven, uitloggen |
 | `reunie25/deelnemers.html` | "Wie komen er?": zoeken, filter speltak + jaar (`?speltak=&jaar=`), tabblad "Per jaar" |
-| `reunie25/herinneringen.html` | Herinneringen (menu na "Wie komen er?"): tabblad Verhalen (lezen, zoeken/filteren, delen, eigen verhaal aanpassen/verwijderen, "Meld het") en Foto's (`#fotos`: grid, groot bekijken met pijltjes/vegen, meerdere tegelijk delen, eigen foto verwijderen, "Meld het"). Alleen voor deelnemers en comité; anderen zien een teaser met het aantal |
+| `reunie25/herinneringen.html` | Herinneringen (menu na "Wie komen er?"): tabblad Verhalen (lezen, zoeken/filteren, delen, eigen verhaal aanpassen/verwijderen, "Meld het") en Foto's (`#fotos`: grid, groot bekijken met pijltjes/vegen, meerdere tegelijk delen, eigen foto verwijderen, "Meld het"), met hartjes bij beide. Alleen voor deelnemers en comité; anderen zien een teaser met het aantal |
 | `reunie25/programma.html` + `programma.txt` | Programma (`tijd | omschrijving`, andere regels = alinea) |
 | `reunie25/vragen.html` + `vragen.txt` | FAQ (`V:` / `A:`); `{bedrag}` = bedrag uit `betalen.txt`, e-mailadressen worden links |
 | `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: zoeken, filter (betaald / nieuw deze week), details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Te beoordelen (`#beoordelen`): foto's per inzending (plaatsen / afwijzen = wissen, "Alle N plaatsen"), opslaggebruik, en nieuwe/aangepaste en gemelde verhalen plaatsen, afwijzen (met opmerking), aanpassen, verwijderen. Tabblad Overleg (`#overleg`, `#overleg-<id>`): comité-chat, zie "Overleg". Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
@@ -79,6 +79,14 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - DEMO: `reunie25.demo.overleg` met twee voorbeeldgesprekken.
 - Wordt met de rest gewist (uiterlijk 23 augustus 2027), met de hand; staat in de privacyverklaring.
 
+## Hartjes (gebouwd 21 november 2026, na mockup)
+
+- Hartje bij geplaatste verhalen (voetregel) en foto's (geven in de grote weergave; bolletje met aantal op de miniatuur). Eén per deelnemer per item, nog een keer tikken haalt het weg. Niet bij je eigen item: daar staat "N mensen vinden dit leuk" (bij 0 niets). Woord "leuk", niet "mooi".
+- Je ziet het aantal, nooit wie. Geen sortering op hartjes (geen wedstrijd).
+- Tabel `hartjes` (`verhaal` of `foto`, `auteur`), zonder directe toegang: `hartjes()` geeft per item aantal, `van_mij`, `eigen`; `zet_hartje(soort, ref, aan)` geeft het nieuwe aantal. Gaat mee weg met het verhaal, de foto of de login.
+- `mijn.html`: blok "Jouw herinneringen" met het totaal aantal hartjes op je eigen verhalen en foto's, alleen als het er meer dan 0 zijn.
+- DEMO: `reunie25.demo.hartjes`, met voorbeeldhartjes van verzonnen deelnemers.
+
 ## Foto's (gebouwd 19 november 2026)
 
 Besloten op 18 en 19 november 2026, na mockups:
@@ -109,9 +117,10 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Menu op telefoon: één veegbare regel in plaats van drie regels (20 november 2026, na mockup).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
-- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
+- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `hartjes`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
 - [x] Schema opnieuw gedraaid (gesprek verwijderen), 21 november 2026.
+- [ ] Schema opnieuw draaien (hartjes), daarna live testen.
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [x] Jaarvelden-pijltjes werken in Safari (getest door Bas, 20 november 2026). Keuzelijsten hebben een eigen stijl (`appearance: none`), in Safari nog nakijken.
 - [ ] `README.md` noemt de oude reponaam.
