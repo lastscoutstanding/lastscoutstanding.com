@@ -120,7 +120,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `hartjes`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
 - [x] Schema opnieuw gedraaid (gesprek verwijderen), 21 november 2026.
-- [ ] Schema opnieuw draaien (hartjes), daarna live testen.
+- [x] Schema opnieuw gedraaid (hartjes), 21 november 2026.
+- [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [x] Jaarvelden-pijltjes werken in Safari (getest door Bas, 20 november 2026). Keuzelijsten hebben een eigen stijl (`appearance: none`), in Safari nog nakijken.
 - [ ] `README.md` noemt de oude reponaam.
