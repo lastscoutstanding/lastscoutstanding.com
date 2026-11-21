@@ -19,7 +19,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | Pad | Rol |
 | --- | --- |
 | `index.html` | Stuurt door naar `reunie25/` (meta refresh). Vervangen als de root iets anders moet worden |
-| `reunie25/index.html` | Home: datum, aftelling, aantal inschrijvingen, een paar namen, "Nieuw bij Herinneringen" (nieuwste geplaatste verhaal en foto voor deelnemers, links naar `herinneringen.html#verhaal-<id>` / `#foto-<id>`; anderen een teaser met aantallen) |
+| `reunie25/index.html` | Home: datum, aftelling, aantal inschrijvingen, namen (10 op telefoon, 20 breder; zijn er meer, dan een willekeurige selectie per bezoek, jijzelf altijd vooraan), "Nieuw bij Herinneringen" (nieuwste geplaatste verhaal en foto voor deelnemers, links naar `herinneringen.html#verhaal-<id>` / `#foto-<id>`; anderen een teaser met aantallen) |
 | `reunie25/inschrijven.html` | Inschrijven; ingelogd = gegevens aanpassen |
 | `reunie25/inloggen.html` | Inloggen met e-mail + code van 6 cijfers (stap `#code`) |
 | `reunie25/mijn.html` | Eigen inschrijving: kaartje, links "wie was er tegelijk met jou", aanpassen, uitschrijven, uitloggen |
