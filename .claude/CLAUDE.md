@@ -141,7 +141,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (erbij), 22 november 2026; live gecontroleerd (`aantal_erbij`, `.ics` als `text/calendar`).
 - [ ] "Ben je erbij?" live testen als deelnemer (keuze wijzigen op Mijn inschrijving) en op Beheer; agendabestand testen in Apple Agenda en Google Agenda.
 - [x] Schema opnieuw gedraaid (bolletjes), 22 november 2026. Bolletjes nog live testen zodra er iets nieuws binnenkomt.
-- [ ] Schema opnieuw draaien (oude speltaknamen: `takken_namen_ok` + constraint) vóór de push.
+- [x] Schema opnieuw gedraaid (oude speltaknamen), 22 november 2026.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).
