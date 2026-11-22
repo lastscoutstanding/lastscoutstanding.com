@@ -116,7 +116,7 @@ Wil je later toch een afzender @scoutingbrandevoort.nl, dan moet de scouting nog
 
 GitHub Pages kent geen doorverwijzingen op de server, dus elke oude pagina wordt een klein doorstuurbestand. Pas doen als stap 5 helemaal klaar is (HTTPS groen).
 
-1. In de repo `lastscoutstanding.com`: verwijder alles in `reunie25/` behalve de tien `.html`-pagina's (index, inschrijven, inloggen, mijn, deelnemers, herinneringen, programma, vragen, beheer, privacy).
+1. In de repo `lastscoutstanding.com`: verwijder alles in `reunie25/` behalve de elf `.html`-pagina's (index, inschrijven, inloggen, mijn, deelnemers, herinneringen, programma, vragen, beheer, privacy, over).
 2. Vervang de inhoud van elk van die pagina's door dit bestand. Het neemt de paginanaam, `?speltak=` en `#code` mee:
 
 ```html
