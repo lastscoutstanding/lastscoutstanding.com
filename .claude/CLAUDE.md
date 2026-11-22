@@ -36,6 +36,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. `SUPABASE_KEY` leeg = DEMO (localStorage), ingevuld = Supabase via `fetch` (geen bibliotheek) |
 | `.github/workflows/supabase-keep-alive.yml` | Houdt Supabase wakker: elke 3 dagen één aanroep van `aantal_deelnemers` |
 | `_docs/beheer.md` | Beheerhandleiding: alle instellingen bij GitHub, Webreus (DNS), Resend en Supabase. Bijwerken bij elke wijziging daar |
+| `_docs/verhuizing.md` | Stappenplan (nog niet uitgevoerd) om de reünie te verhuizen naar een eigen repo `reunie25` op reunie.scoutingbrandevoort.nl (optie 1a, 20 november 2026) |
 | `_supabase/schema.sql` | Tabellen, row level security en functies voor Supabase; één keer draaien in de SQL-editor. Map met `_`, dus niet gepubliceerd |
 | `reunie25/nav.js` | Kop (blauwe band met logo, titel en datum) + lichte menubalk eronder (sticky, actieve pagina geel onderstreept, "Mijn inschrijving →" / "Inloggen →" vast rechts; onder 760 px één veegbare regel met vervaagde randen en "Mijn →"), footer, testversie-balk bij DEMO |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
@@ -125,3 +126,4 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [ ] Programma en vragen invullen (`programma.txt`, `vragen.txt`).
 - [x] Jaarvelden-pijltjes werken in Safari (getest door Bas, 20 november 2026). Keuzelijsten hebben een eigen stijl (`appearance: none`), in Safari nog nakijken.
 - [ ] `README.md` noemt de oude reponaam.
+- [ ] Eventueel verhuizen naar reunie.scoutingbrandevoort.nl volgens `_docs/verhuizing.md` (vóór de aankondiging; vraagt twee DNS-records van de scouting).
