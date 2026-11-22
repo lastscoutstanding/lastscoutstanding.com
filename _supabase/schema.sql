@@ -38,6 +38,13 @@ alter table public.deelnemers add column if not exists bijnaam text not null def
 alter table public.deelnemers add column if not exists toon_bijnaam boolean not null default true;
 -- Date the comité saw the payment; null = not paid yet. Only comité members can change it.
 alter table public.deelnemers add column if not exists betaald_op date;
+-- Coming to the reunion? ja / misschien / nee. Only the participant and the comité see it;
+-- visitors only get the totals (aantal_erbij). erbij_sinds = date of the last change.
+alter table public.deelnemers add column if not exists erbij text not null default 'ja'
+  check (erbij in ('ja', 'misschien', 'nee'));
+alter table public.deelnemers add column if not exists erbij_sinds date;
+update public.deelnemers set erbij_sinds = sinds where erbij_sinds is null;
+alter table public.deelnemers alter column erbij_sinds set default current_date;
 
 -- E-mail addresses of comité members. No policies: not readable through the API at all.
 create table if not exists public.beheerders (
@@ -109,13 +116,17 @@ language plpgsql security definer set search_path = public
 as $$
 declare
   betaald date := new.betaald_op;
+  keuze   text := new.erbij;
 begin
   -- No login: SQL editor or table editor in the Supabase dashboard. Trusted, leave as is.
   if auth.uid() is null then return new; end if;
-  -- Someone else's row: only zet_betaald() (comité) gets here. Change nothing but betaald_op.
+  -- Someone else's row: only zet_betaald() and zet_erbij() (comité) get here.
+  -- Change nothing but betaald_op and erbij.
   if tg_op = 'UPDATE' and old.id <> auth.uid() then
     new := old;
     new.betaald_op := betaald;
+    new.erbij := keuze;
+    if keuze is distinct from old.erbij then new.erbij_sinds := current_date; end if;
     new.bijgewerkt := now();
     return new;
   end if;
@@ -124,12 +135,14 @@ begin
   if tg_op = 'UPDATE' then
     new.id := old.id; new.sinds := old.sinds; new.aangemaakt := old.aangemaakt;
     if not public.is_beheerder() then new.betaald_op := old.betaald_op; end if;
+    new.erbij_sinds := case when new.erbij is distinct from old.erbij then current_date else old.erbij_sinds end;
   else
     if exists (select 1 from geblokkeerd where email = lower(new.email)) then
       raise exception 'geblokkeerd' using errcode = '42501';
     end if;
     new.sinds := current_date; new.aangemaakt := now();
     new.betaald_op := null;
+    new.erbij_sinds := current_date;
   end if;
   return new;
 end;
@@ -237,6 +250,13 @@ returns int
 language sql stable security definer set search_path = public
 as $$ select count(*)::int from deelnemers; $$;
 
+-- How many said ja, misschien and nee, e.g. {"ja": 42, "misschien": 11, "nee": 6}.
+-- Totals only: who chose what is for the participant and the comité.
+create or replace function public.aantal_erbij()
+returns jsonb
+language sql stable security definer set search_path = public
+as $$ select coalesce(jsonb_object_agg(erbij, n), '{}') from (select erbij, count(*)::int n from deelnemers group by erbij) t; $$;
+
 -- Unsubscribe: removes the login itself; the deelnemers row goes with it (on delete cascade).
 create or replace function public.verwijder_mij()
 returns void
@@ -254,6 +274,20 @@ begin
   if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
   update deelnemers set betaald_op = case when betaald then coalesce(betaald_op, current_date) end
     where id = deelnemer returning betaald_op into datum;
+  return datum;
+end;
+$$;
+
+-- Comité: change whether someone comes (ja / misschien / nee). Returns the date of the change.
+create or replace function public.zet_erbij(deelnemer uuid, keuze text)
+returns date
+language plpgsql security definer set search_path = public
+as $$
+declare
+  datum date;
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comité' using errcode = '42501'; end if;
+  update deelnemers set erbij = keuze where id = deelnemer returning erbij_sinds into datum;
   return datum;
 end;
 $$;
@@ -458,6 +492,8 @@ revoke all on function public.verwijder_mij() from public, anon, authenticated;
 revoke all on function public.is_beheerder() from public, anon, authenticated;
 revoke all on function public.deelnemers_stempel() from public, anon, authenticated;
 revoke all on function public.zet_betaald(uuid, boolean) from public, anon, authenticated;
+revoke all on function public.zet_erbij(uuid, text) from public, anon, authenticated;
+revoke all on function public.aantal_erbij() from public, anon, authenticated;
 revoke all on function public.mijn_rol() from public, anon, authenticated;
 revoke all on function public.is_hoofdbeheerder() from public, anon, authenticated;
 revoke all on function public.comite() from public, anon, authenticated;
@@ -481,6 +517,8 @@ grant execute on function public.aantal_deelnemers() to anon, authenticated;
 grant execute on function public.verwijder_mij() to authenticated;
 grant execute on function public.is_beheerder() to authenticated;
 grant execute on function public.zet_betaald(uuid, boolean) to authenticated;
+grant execute on function public.zet_erbij(uuid, text) to authenticated;
+grant execute on function public.aantal_erbij() to anon, authenticated;
 grant execute on function public.mijn_rol() to authenticated;
 grant execute on function public.is_hoofdbeheerder() to authenticated;
 grant execute on function public.comite() to authenticated;

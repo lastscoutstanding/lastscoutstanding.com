@@ -101,13 +101,15 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 
 | Onderdeel | Wat het doet |
 | --- | --- |
-| tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security). Comité leest alle rijen. Kolom `betaald_op`: datum waarop het comité de betaling zag, alleen te wijzigen door het comité |
+| tabel `deelnemers` | één rij per persoon, gekoppeld aan de login; alleen eigen rij lezen/wijzigen/verwijderen (row level security). Comité leest alle rijen. Kolom `betaald_op`: datum waarop het comité de betaling zag, alleen te wijzigen door het comité. Kolom `erbij` (`ja`/`misschien`/`nee`) met `erbij_sinds`: de deelnemer en het comité passen hem aan |
 | tabel `beheerders` | comité: `email`, `rol` (`beheerder` of `hoofdbeheerder`), `toegevoegd_door`, `toegevoegd_op`. Niet direct leesbaar via de site. Gewone beheerders voegt een hoofdbeheerder toe op Beheer → Comité. Hoofdbeheerders alleen in de SQL Editor: `insert into public.beheerders (email, rol) values ('naam@example.com', 'hoofdbeheerder') on conflict (email) do update set rol = 'hoofdbeheerder';` |
 | tabel `geblokkeerd` | adressen die het comité verwijderde en blokkeerde (`email`, `reden`, `door`, `op`). Zo'n adres krijgt geen code meer bij inschrijven en de trigger weigert een nieuwe rij. Deblokkeren op Beheer → Comité |
 | tabel `verhalen` | verhalen bij Herinneringen; alleen eigen verhalen direct leesbaar, de rest via functies. Status `nieuw` → comité plaatst of wijst af; `gemeld` = verborgen na een melding |
 | tabel `fotos` + bucket `fotos` (Storage) | foto's bij Herinneringen. Bucket is privé, alleen JPEG tot 1 MB; regels op `storage.objects`: uploaden in je eigen map, bekijken als `foto_zichtbaar()`, verwijderen eigen map of comité. Max. 30 per persoon. Verbruik: Storage in het dashboard, of de tegel op Beheer → Te beoordelen |
-| `publieke_deelnemers()` | lijst voor "Wie komen er?", verborgen velden zijn leeg; e-mail komt nooit mee |
-| `aantal_deelnemers()` | totaal aantal inschrijvingen |
+| `publieke_deelnemers()` | lijst voor "Wie doen er mee?", verborgen velden zijn leeg; e-mail komt nooit mee (en `erbij` ook niet) |
+| `aantal_deelnemers()` | totaal aantal inschrijvingen (ook gebruikt door de keep-alive) |
+| `aantal_erbij()` | aantallen ja/misschien/nee voor de tellers op de home en "Wie doen er mee?"; nooit wie |
+| `zet_erbij()` | comité: "Erbij?" van iemand anders aanpassen (pagina Beheer) |
 | `verwijder_mij()` | uitschrijven: wist login en inschrijving (alleen ingelogd) |
 | `zet_betaald()` | comité: betaling afvinken of terugzetten (pagina Beheer) |
 | `is_beheerder()` | bepaalt of iemand de pagina Beheer en de link in het menu krijgt |
@@ -119,7 +121,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | `te_beoordelen()`, `beoordeel_verhaal()` | comité: tabblad Te beoordelen (plaatsen, afwijzen, aanpassen, verwijderen) |
 | `fotos_lijst()`, `aantal_fotos()`, `meld_foto()`, `fotos_te_beoordelen()`, `beoordeel_foto()`, `foto_opslag()`, `fotos_van()` | foto's: lijst voor deelnemers, aantal, melden, beoordelen (plaatsen/wissen), opslaggebruik, opruimen bij verwijderen |
 | `is_comite_adres()` | inlogpagina: een comitélid zonder inschrijving krijgt toch een code (de login wordt dan aangemaakt). Verraadt alleen óf een adres in het comité zit |
-| trigger `deelnemers_stempel` | vult e-mail en datums zelf in; een deelnemer kan `betaald_op` niet zelf veranderen. Wijzigingen in de Table Editor of SQL Editor laat hij met rust |
+| trigger `deelnemers_stempel` | vult e-mail en datums zelf in (ook `erbij_sinds` bij een andere keuze); een deelnemer kan `betaald_op` niet zelf veranderen. Wijzigingen in de Table Editor of SQL Editor laat hij met rust |
 
 ### Let op bij het gratis abonnement
 
@@ -172,3 +174,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 19 nov 2026 | Foto's bij Herinneringen: bucket `fotos`, tabel `fotos`, beoordelen op Beheer, privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
 | 19 nov 2026 | Herinneringen met verhalen, tabblad Te beoordelen op Beheer, tabel `verhalen`, privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
 | 19 nov 2026 | Verwijderen en blokkeren op Beheer, tabel `geblokkeerd`, label "nieuw". Geen goedkeuring vooraf (besloten na mockup). Schema opnieuw gedraaid ✅ |
+| 22 nov 2026 | Vraag "Ben je erbij?" (ja/misschien/nee): kolommen `erbij` en `erbij_sinds`, functies `aantal_erbij()` en `zet_erbij()`, aangepaste trigger; privacyverklaring aangevuld. Schema nog draaien vóór de push |
