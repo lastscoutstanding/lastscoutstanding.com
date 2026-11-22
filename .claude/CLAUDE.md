@@ -132,7 +132,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
 - [x] Schema opnieuw gedraaid (gesprek verwijderen), 21 november 2026.
 - [x] Schema opnieuw gedraaid (hartjes), 21 november 2026.
-- [ ] Schema opnieuw draaien (erbij: kolommen, `aantal_erbij`, `zet_erbij`, trigger) vóór de push van 22 november 2026: zonder die kolom mislukt opslaan op de live site.
+- [x] Schema opnieuw gedraaid (erbij), 22 november 2026; live gecontroleerd (`aantal_erbij`, `.ics` als `text/calendar`).
+- [ ] "Ben je erbij?" live testen als deelnemer (keuze wijzigen op Mijn inschrijving) en op Beheer; agendabestand testen in Apple Agenda en Google Agenda.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).
