@@ -564,6 +564,11 @@ create table if not exists public.fotos (
 );
 alter table public.fotos enable row level security;
 
+-- When a photo last needed the comité (upload or report), for the "new since you looked" badges.
+alter table public.fotos add column if not exists bijgewerkt timestamptz;
+update public.fotos set bijgewerkt = coalesce(gemeld_op::timestamptz, aangemaakt) where bijgewerkt is null;
+alter table public.fotos alter column bijgewerkt set default now();
+
 create or replace function public.fotos_stempel()
 returns trigger
 language plpgsql security definer set search_path = public
@@ -573,7 +578,7 @@ begin
   if (select count(*) from fotos where auteur = auth.uid()) >= 30 then
     raise exception 'max' using errcode = '22023';
   end if;
-  new.auteur := auth.uid(); new.status := 'nieuw'; new.aangemaakt := now();
+  new.auteur := auth.uid(); new.status := 'nieuw'; new.aangemaakt := now(); new.bijgewerkt := now();
   new.melding := null; new.gemeld_door := null; new.gemeld_op := null;
   if new.pad not like auth.uid()::text || '/%' then raise exception 'pad' using errcode = '22023'; end if;
   return new;
@@ -655,7 +660,7 @@ begin
   if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
   perform set_config('reunie.comite', '1', true);
   update fotos set status = 'gemeld', melding = left(nullif(trim(reden), ''), 500),
-                   gemeld_door = mijn_naam(), gemeld_op = current_date
+                   gemeld_door = mijn_naam(), gemeld_op = current_date, bijgewerkt = now()
     where id = foto and status = 'geplaatst';
 end;
 $$;
@@ -911,6 +916,78 @@ revoke all on function public.berichten_na() from public, anon, authenticated;
 revoke all on function public.start_gesprek(text, text, text, text, text, text) from public, anon, authenticated;
 grant execute on function public.aantal_te_beoordelen() to authenticated;
 grant execute on function public.start_gesprek(text, text, text, text, text, text) to authenticated;
+
+-- ---------------------------------------------------------------- seen (comité badges)
+
+-- What each comité member has seen, so a yellow badge means "new since you last looked",
+-- on every device. soort 'gesprek' + ref = conversation id, tijd = time of the last message
+-- seen; soort 'beoordelen' + ref '' = when the tab Te beoordelen was last opened.
+-- No direct access: mijn_gezien(), zet_gezien() and nieuw_voor_mij(). Goes with the login.
+-- Wiped with everything else. Without a row, the last 7 days count as new.
+create table if not exists public.gezien (
+  wie   uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  soort text not null check (soort in ('gesprek', 'beoordelen')),
+  ref   text not null default '' check (char_length(ref) <= 100),
+  tijd  timestamptz not null,
+  primary key (wie, soort, ref)
+);
+alter table public.gezien enable row level security;
+revoke all on table public.gezien from anon, authenticated;
+
+create or replace function public.mijn_gezien()
+returns table (soort text, ref text, tijd timestamptz)
+language sql stable security definer set search_path = public
+as $$ select soort, ref, tijd from gezien where wie = auth.uid() and is_beheerder(); $$;
+
+-- items: [{ "soort": "gesprek", "ref": "<id>", "tijd": "..." }, ...]. Only moves forward, never past now.
+create or replace function public.zet_gezien(items jsonb)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  insert into gezien (wie, soort, ref, tijd)
+    select auth.uid(), x.soort, coalesce(x.ref, ''), least(coalesce(x.tijd, now()), now())
+    from jsonb_to_recordset(items) as x(soort text, ref text, tijd timestamptz)
+    where x.soort in ('gesprek', 'beoordelen')
+  on conflict (wie, soort, ref) do update set tijd = greatest(gezien.tijd, excluded.tijd);
+end;
+$$;
+
+-- Badges for the menu and the tabs on Beheer:
+--   overleg: conversations with something new by someone else (a new conversation or a message,
+--            status lines not counted) since you last opened it;
+--   beoordelen_nieuw: stories and photos waiting that arrived (or were reported) since you
+--            last opened Te beoordelen; beoordelen: all that wait.
+create or replace function public.nieuw_voor_mij()
+returns jsonb
+language plpgsql stable security definer set search_path = public
+as $$
+declare
+  ik    uuid := auth.uid();
+  grens timestamptz := now() - interval '7 days';
+  b     timestamptz;
+begin
+  if not is_beheerder() then return '{}'::jsonb; end if;
+  b := coalesce((select tijd from gezien where wie = ik and soort = 'beoordelen' and ref = ''), grens);
+  return jsonb_build_object(
+    'overleg', (select count(*)::int from gesprekken g
+                left join gezien z on z.wie = ik and z.soort = 'gesprek' and z.ref = g.id::text
+                where (g.auteur is distinct from ik and g.aangemaakt > coalesce(z.tijd, grens))
+                   or exists (select 1 from berichten m where m.gesprek = g.id and not m.systeem
+                              and m.auteur is distinct from ik and m.aangemaakt > coalesce(z.tijd, grens))),
+    'beoordelen_nieuw', (select count(*)::int from verhalen where status in ('nieuw', 'gemeld') and bijgewerkt > b)
+                      + (select count(*)::int from fotos where status in ('nieuw', 'gemeld') and bijgewerkt > b),
+    'beoordelen', aantal_te_beoordelen());
+end;
+$$;
+
+revoke all on function public.mijn_gezien() from public, anon, authenticated;
+revoke all on function public.zet_gezien(jsonb) from public, anon, authenticated;
+revoke all on function public.nieuw_voor_mij() from public, anon, authenticated;
+grant execute on function public.mijn_gezien() to authenticated;
+grant execute on function public.zet_gezien(jsonb) to authenticated;
+grant execute on function public.nieuw_voor_mij() to authenticated;
 
 -- ---------------------------------------------------------------- hartjes
 

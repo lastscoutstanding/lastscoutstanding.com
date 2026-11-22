@@ -85,8 +85,8 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - Comité-chat op Beheer → Overleg. Tabellen `gesprekken` (titel, soort vrij/deelnemer/verhaal/foto/pagina, `ref` + `ref_naam`, status open/hot/done) en `berichten` (≤ 1000 tekens, `systeem` = "X zette de status op hot"). Alleen voor beheerders (row level security). Starten via `start_gesprek()`; triggers vullen auteur, naam (`mijn_naam()`) en tijden in, en na de start kan alleen de status veranderen.
 - Iedereen in het comité mag de status wijzigen. Een gesprek verwijderen (met alle berichten) mag wie het startte, en een hoofdbeheerder elk gesprek (21 november 2026, eerst kon het niet). Je eigen bericht verwijderen mag, aanpassen niet. Een gesprek over een verwijderde deelnemer blijft staan met "(verwijderd)".
 - Knopje bij een item telt alleen lopende gesprekken (niet done): geen = "💬 Bespreek"; één = link "💬 Overleg *status*"; meer = "💬 N gesprekken" naar `beheer.html?over=<soort>:<ref>#overleg` (lijst gefilterd op dat item, "alles tonen" haalt het filter weg). Bij één of meer staat er een "+" naast voor een nieuw gesprek over hetzelfde item.
-- Geen mail en niet live. Gele stip = nieuwe berichten van anderen sinds je het gesprek voor het laatst opende (localStorage `reunie25.overleg.gezien`).
-- Bolletjes: geel bij "Beheer" in het menu en bij "Te beoordelen" = foto's en verhalen die wachten (`aantal_te_beoordelen()`); rood bij "Overleg" = aantal op hot. Hot telt bewust niet mee in het menu, omdat gesprekken lang op hot kunnen staan.
+- Geen mail en niet live. Gele stip bij een gesprek = nieuw gesprek of nieuw bericht van een ander (geen statusregels, niet je eigen) sinds je het laatst opende.
+- Bolletjes (22 november 2026, na mockup; Bas miste ochtendberichten van een collega): geel = "nieuw voor jou sinds je laatst keek", weg zodra je kijkt. Overleg-tab: aantal gesprekken met een stip. Te beoordelen-tab: geel = binnengekomen of gemeld sinds je dat tabblad opende, anders grijs getal = wacht nog. "Beheer" in het menu: beide gele getallen samen, op elke pagina (`nieuw_voor_mij()`; op Beheer houdt de pagina het zelf bij via `window.eigenVlagBeheer`). Hot heeft geen bolletje meer (rood label en bovenaan in de lijst blijven). Gezien staat per comitélid in de tabel `gezien` (op elk apparaat); zonder rij telt de afgelopen 7 dagen als nieuw. Oude localStorage `reunie25.overleg.gezien` wordt één keer overgezet. Op de computer opent Overleg vanzelf het bovenste ongelezen gesprek. DEMO: `reunie25.demo.gezien`. Hot telt bewust nergens mee, omdat gesprekken lang op hot kunnen staan.
 - DEMO: `reunie25.demo.overleg` met twee voorbeeldgesprekken.
 - Wordt met de rest gewist (uiterlijk 23 augustus 2027), met de hand; staat in de privacyverklaring.
 
@@ -128,12 +128,13 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Menu op telefoon: één veegbare regel in plaats van drie regels (20 november 2026, na mockup).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
-- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `hartjes`, `gesprekken`, `berichten`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
+- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `hartjes`, `gesprekken`, `berichten`, `gezien`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
 - [x] Schema opnieuw gedraaid (gesprek verwijderen), 21 november 2026.
 - [x] Schema opnieuw gedraaid (hartjes), 21 november 2026.
 - [x] Schema opnieuw gedraaid (erbij), 22 november 2026; live gecontroleerd (`aantal_erbij`, `.ics` als `text/calendar`).
 - [ ] "Ben je erbij?" live testen als deelnemer (keuze wijzigen op Mijn inschrijving) en op Beheer; agendabestand testen in Apple Agenda en Google Agenda.
+- [ ] Schema opnieuw draaien (bolletjes: tabel `gezien`, `nieuw_voor_mij` e.d., kolom `fotos.bijgewerkt`) vóór de push.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).

@@ -121,6 +121,7 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | `te_beoordelen()`, `beoordeel_verhaal()` | comité: tabblad Te beoordelen (plaatsen, afwijzen, aanpassen, verwijderen) |
 | `fotos_lijst()`, `aantal_fotos()`, `meld_foto()`, `fotos_te_beoordelen()`, `beoordeel_foto()`, `foto_opslag()`, `fotos_van()` | foto's: lijst voor deelnemers, aantal, melden, beoordelen (plaatsen/wissen), opslaggebruik, opruimen bij verwijderen |
 | `is_comite_adres()` | inlogpagina: een comitélid zonder inschrijving krijgt toch een code (de login wordt dan aangemaakt). Verraadt alleen óf een adres in het comité zit |
+| tabel `gezien` + `mijn_gezien()`, `zet_gezien()`, `nieuw_voor_mij()` | comité: wat iemand in Overleg en Te beoordelen al gezien heeft, voor de gele bolletjes (op elk apparaat). Geen directe toegang. `fotos.bijgewerkt` = wanneer een foto binnenkwam of gemeld werd |
 | trigger `deelnemers_stempel` | vult e-mail en datums zelf in (ook `erbij_sinds` bij een andere keuze); een deelnemer kan `betaald_op` niet zelf veranderen. Wijzigingen in de Table Editor of SQL Editor laat hij met rust |
 
 ### Let op bij het gratis abonnement
@@ -175,3 +176,4 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 19 nov 2026 | Herinneringen met verhalen, tabblad Te beoordelen op Beheer, tabel `verhalen`, privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
 | 19 nov 2026 | Verwijderen en blokkeren op Beheer, tabel `geblokkeerd`, label "nieuw". Geen goedkeuring vooraf (besloten na mockup). Schema opnieuw gedraaid ✅ |
 | 22 nov 2026 | Vraag "Ben je erbij?" (ja/misschien/nee): kolommen `erbij` en `erbij_sinds`, functies `aantal_erbij()` en `zet_erbij()`, aangepaste trigger; privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
+| 22 nov 2026 | Bolletjes voor het comité = "nieuw sinds je laatst keek": tabel `gezien`, functies `mijn_gezien()`, `zet_gezien()`, `nieuw_voor_mij()`, kolom `fotos.bijgewerkt`; privacyverklaring aangevuld. Schema nog draaien vóór de push |
