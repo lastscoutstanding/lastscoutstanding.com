@@ -61,6 +61,8 @@ De inhoud van `reunie25/` komt in de root van een nieuwe repo, met de geschieden
    git push -u origin main
    ```
 
+Pas in `reunie.ics` de regels `DESCRIPTION` en `URL` aan naar `https://reunie.scoutingbrandevoort.nl/`. Een agendabestand kan geen relatieve link bevatten; het is de enige plek met het volledige adres van de site.
+
 Voeg geen `.nojekyll` toe. Zonder dat bestand publiceert GitHub de mappen met een `_` (`_docs`, `_supabase`) niet, net als nu.
 
 ## Stap 2: push-token en Claude Code
