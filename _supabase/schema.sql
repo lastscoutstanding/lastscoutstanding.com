@@ -21,7 +21,8 @@ create table if not exists public.deelnemers (
   achternaam      text not null default '' check (char_length(achternaam) <= 80),
   bijnaam         text not null default '' check (char_length(bijnaam) <= 40),
   geboortejaar    int  not null check (geboortejaar between 1930 and 2030),
-  -- [{ "speltak": "Welpen", "rol": "lid" | "leiding", "van": 2003, "tot": 2006 | null }]
+  -- [{ "speltak": "Welpen", "rol": "lid" | "leiding", "van": 2003, "tot": 2006 | null, "naam": "Kabouters" }]
+  -- naam (optional) = what the speltak was called then, chosen under "Heette toen"; max 30.
   takken          jsonb not null default '[]' check (jsonb_typeof(takken) = 'array' and jsonb_array_length(takken) <= 30),
   toon_voornaam   boolean not null default true,
   toon_achternaam boolean not null default false,
@@ -38,6 +39,15 @@ alter table public.deelnemers add column if not exists bijnaam text not null def
 alter table public.deelnemers add column if not exists toon_bijnaam boolean not null default true;
 -- Date the comité saw the payment; null = not paid yet. Only comité members can change it.
 alter table public.deelnemers add column if not exists betaald_op date;
+-- The optional old name per speltak ("Heette toen") is at most 30 characters.
+create or replace function public.takken_namen_ok(t jsonb)
+returns boolean
+language sql immutable set search_path = public
+as $$ select not exists (select 1 from jsonb_array_elements(t) e
+                         where jsonb_typeof(e) = 'object' and char_length(coalesce(e ->> 'naam', '')) > 30); $$;
+alter table public.deelnemers drop constraint if exists takken_namen_kort;
+alter table public.deelnemers add constraint takken_namen_kort check (public.takken_namen_ok(takken));
+
 -- Coming to the reunion? ja / misschien / nee. Only the participant and the comité see it;
 -- visitors only get the totals (aantal_erbij). erbij_sinds = date of the last change.
 alter table public.deelnemers add column if not exists erbij text not null default 'ja'

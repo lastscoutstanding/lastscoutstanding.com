@@ -176,4 +176,5 @@ Bij veel aanmeldingen op één dag (aankondiging): na 100 mails krijgen mensen p
 | 19 nov 2026 | Herinneringen met verhalen, tabblad Te beoordelen op Beheer, tabel `verhalen`, privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
 | 19 nov 2026 | Verwijderen en blokkeren op Beheer, tabel `geblokkeerd`, label "nieuw". Geen goedkeuring vooraf (besloten na mockup). Schema opnieuw gedraaid ✅ |
 | 22 nov 2026 | Vraag "Ben je erbij?" (ja/misschien/nee): kolommen `erbij` en `erbij_sinds`, functies `aantal_erbij()` en `zet_erbij()`, aangepaste trigger; privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
-| 22 nov 2026 | Bolletjes voor het comité = "nieuw sinds je laatst keek": tabel `gezien`, functies `mijn_gezien()`, `zet_gezien()`, `nieuw_voor_mij()`, kolom `fotos.bijgewerkt`; privacyverklaring aangevuld. Schema nog draaien vóór de push |
+| 22 nov 2026 | Bolletjes voor het comité = "nieuw sinds je laatst keek": tabel `gezien`, functies `mijn_gezien()`, `zet_gezien()`, `nieuw_voor_mij()`, kolom `fotos.bijgewerkt`; privacyverklaring aangevuld. Schema opnieuw gedraaid ✅ |
+| 22 nov 2026 | Oude speltaknamen ("Heette toen"): `takken` kan per speltak een `naam` hebben, max. 30 tekens (functie `takken_namen_ok()`, constraint `takken_namen_kort`). Schema nog draaien vóór de push |

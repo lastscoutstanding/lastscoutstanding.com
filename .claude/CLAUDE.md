@@ -32,7 +32,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/betalen.txt` | Bedrag, betaallink, IBAN voor het betaalblok op `mijn.html`; leeg = geen blok |
 | `reunie25/over.html` | "Over deze site" (link in de footer): gemaakt door Peter (“Peter Limonade”) en Claude samen; tijdens gebruik kijkt geen AI mee |
 | `reunie25/privacy.html` | Privacyverklaring (noemt Supabase en Resend, wissen uiterlijk 23 augustus 2027) |
-| `reunie25/speltakken.txt` | Speltakken met instapleeftijd, `opgericht = 2001`; regel zonder leeftijd = rol zonder speltak (Bestuur / vrijwilliger) |
+| `reunie25/speltakken.txt` | Speltakken met instapleeftijd, `opgericht = 2001`; regel zonder leeftijd = rol zonder speltak (Bestuur / vrijwilliger); oude namen achter een `\|` (zie "Oude speltaknamen") |
 | `reunie25/reunie.js` | Gedeeld: speltakken.txt inlezen, jaren berekenen, persoonskaartje, `esc()`, jaarvelden-pijltjes |
 | `reunie25/data.js` | Datalaag: de enige plek die met opslag praat. `SUPABASE_KEY` leeg = DEMO (localStorage), ingevuld = Supabase via `fetch` (geen bibliotheek) |
 | `.github/workflows/supabase-keep-alive.yml` | Houdt Supabase wakker: elke 3 dagen één aanroep van `aantal_deelnemers` |
@@ -50,8 +50,8 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - Contactadres van het comité: reunie@scoutingbrandevoort.nl (sinds 19 november 2026). Bijdrage € 5 per persoon (bedrag in `betalen.txt`). Voor iedereen van de club, van nu en toen (jeugdleden, leiding, bestuur, vrijwilligers), geen introducés. Er komt waarschijnlijk een leeftijdsgrens; nog niet bepaald (22 november 2026). Woordkeus: "scouts van nu en toen", niet "oud-leden" of "(oud-)leden"; anoniem gedeeld = "gedeeld door iemand van de club". Knop/menu "Doe mee" i.p.v. "Inschrijven". Op Beheer → Comité worden de hoofdbeheerders bij naam genoemd, uit de lijst zelf.
 - "Scobra" alleen heel spaarzaam gebruiken (nu één keer, in de footer): niet iedereen vindt het een goede naam.
 - Logo: `reunie25/logo.svg` (zwarte letters) en `logo-wit.svg` (witte letters, in de blauwe kop; ook favicon via `nav.js`). Omgezet van het originele Illustrator-bestand uit 2011 (`~/Documents/Peter/Scouting Brandevoort/Nieuwe logo/20110503 Definitief/`), een PDF-compatibel `.ai`. macOS rendert dat bestand met een zwarte lelie; de SVG heeft de juiste kleuren (geel #ffe400, rood #fa0000, blauw #495faa).
-- Persoon: voornaam, achternaam, bijnaam (optioneel, max. 40, getoond als Sanne “Snoes” Jansen), e-mail, geboortejaar, `takken: [{speltak, rol: 'lid'|'leiding', van, tot}]` (`tot` null = heden), `toon: {voornaam, achternaam, bijnaam, leeftijd, takken}`, `sinds`, `erbij` + `erbij_sinds` (zie "Ben je erbij?").
-- Jeugdlid-jaren worden berekend uit geboortejaar + `speltakken.txt` (je zit in een speltak tot de leeftijd van de volgende), in kalenderjaren, en zijn met de hand aan te passen. Leiding-jaren vult iemand zelf in.
+- Persoon: voornaam, achternaam, bijnaam (optioneel, max. 40, getoond als Sanne “Snoes” Jansen), e-mail, geboortejaar, `takken: [{speltak, rol: 'lid'|'leiding', van, tot, naam?}]` (`tot` null = heden, `naam` = oude naam), `toon: {voornaam, achternaam, bijnaam, leeftijd, takken}`, `sinds`, `erbij` + `erbij_sinds` (zie "Ben je erbij?").
+- Jeugdlid-jaren worden berekend uit geboortejaar + `speltakken.txt` (je zit in een speltak tot de leeftijd van de eerstvolgende hogere speltak; dezelfde leeftijd = naast elkaar, zoals Vuurvogels en Plusscouts, allebei Stam vanaf 21), in kalenderjaren, nooit vóór 2001, en zijn met de hand aan te passen. Leiding-jaren vult iemand zelf in. Jaren vóór 2001 (oudere leden) kunnen met de hand of met pijltje omlaag, tot 1930; pijltje omhoog vanuit leeg begint bij 2001 (`data-start`). Het jaarfilter op "Wie doen er mee?" begint bij 2001.
 - Leeftijd = jubileumjaar (opgericht + 25 = 2026) − geboortejaar, getoond als "57 bij het jubileum" (21 november 2026; eerst 2027). Klopt vaker dan het reüniejaar, nu en op de reüniedag, en zit het ernaast dan is iemand een jaar jonger. Knipoog in de tooltip en op `mijn.html`: "2,3 keer zo oud als de club" / "5 jaar jonger dan de club". Geen "Scobra".
 - E-mailadressen ziet alleen het comité; `beheer.html` heeft CSV-download en "Kopieer e-mailadressen" (van de gefilterde rijen, voor BCC).
 - Jezelf terugvinden (20 november 2026): ingelogd krijgt je eigen naam-pill op de home een geel accent (en staat vooraan), en je kaartje op "Wie doen er mee?" een gele rand met "jij". Herkend met `Reunie.zelf(ik)`: vergelijkt de publieke velden met `Data.publiek(ik)`, want publieke rijen hebben geen id. Je eigen pill en kaartje linken naar `mijn.html`.
@@ -62,6 +62,12 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - Inlogflow: inschrijven → formulier in sessionStorage → code → pas dan opslaan. E-mailadres nooit in de URL.
 - DEMO: inlogcode `123456`, 20 verzonnen voorbeelddeelnemers, inschrijvingen in localStorage (`reunie25.demo`, sessie `reunie25.sessie`). Ingelogd = beheerder; betalingen in `reunie25.demo.betaald`.
 - Betalen (19 november 2026): vaste betaallink van de bank, geen betaalprovider. Het comité vinkt betalingen af op `beheer.html` (`zet_betaald()`, kolom `betaald_op`); de trigger voorkomt dat een deelnemer zichzelf op betaald zet. Lokaal testen in DEMO: `SUPABASE_KEY` tijdelijk leeg maken, niet committen.
+
+## Oude speltaknamen (gebouwd 22 november 2026, na mockup; vraag van Marc)
+
+- In `speltakken.txt` staan per speltak oude/andere namen achter een `|` (lijst van Bas, ook namen van vóór 2001 voor oudere leden; "DWEK" bewust weggelaten). Onder een aangevinkte speltak kiest iemand "Heette toen": huidige naam (standaard), een oude naam, of "andere naam…" (vrij, max. 30, schemacheck `takken_namen_ok`).
+- De speltak zelf blijft de huidige naam: filters, jaren, "Per jaar" en "wie was er tegelijk" werken daarop. Kaartje toont de gekozen naam met tooltip "nu Scouts"; Beheer/CSV "Verkenners (Scouts) 1991–1994". Filtermenu toont de eerste twee oude namen; het zoekveld vindt ook speltakken via (oude) namen (`Reunie.takPast`).
+- DEMO: Mark (leiding Verkenners) en Ruud (leiding Esta's vanaf 1996).
 
 ## Ben je erbij? (gebouwd 22 november 2026, na mockup)
 
@@ -134,7 +140,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (hartjes), 21 november 2026.
 - [x] Schema opnieuw gedraaid (erbij), 22 november 2026; live gecontroleerd (`aantal_erbij`, `.ics` als `text/calendar`).
 - [ ] "Ben je erbij?" live testen als deelnemer (keuze wijzigen op Mijn inschrijving) en op Beheer; agendabestand testen in Apple Agenda en Google Agenda.
-- [ ] Schema opnieuw draaien (bolletjes: tabel `gezien`, `nieuw_voor_mij` e.d., kolom `fotos.bijgewerkt`) vóór de push.
+- [x] Schema opnieuw gedraaid (bolletjes), 22 november 2026. Bolletjes nog live testen zodra er iets nieuws binnenkomt.
+- [ ] Schema opnieuw draaien (oude speltaknamen: `takken_namen_ok` + constraint) vóór de push.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).
