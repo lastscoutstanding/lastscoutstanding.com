@@ -42,7 +42,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/nav.js` | Kop (blauwe band met logo, titel en datum) + lichte menubalk eronder (sticky, actieve pagina geel onderstreept, "Mijn inschrijving →" / "Inloggen →" vast rechts; onder 760 px één veegbare regel met vervaagde randen en "Mijn →"), footer, testversie-balk bij DEMO |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
 | `reunie25/overleg.js` | Overleg-knopjes (💬) voor het comité bij deelnemers, verhalen, foto's en onderaan elke pagina, en de dialoog "Nieuw overleg". Herinneringen en Beheer laden het zelf; op andere pagina's laadt `nav.js` het voor comitéleden |
-| `reunie25/uitsnijden.js` | `Uitsnijden.kies(titel)`: bestandskiezer + `<dialog>` om jezelf in een rondje uit te snijden (slepen, zoomen met schuif/wiel/twee vingers); geeft een JPEG van 200 × 200 px. Gebruikt op `inschrijven.html` |
+| `reunie25/uitsnijden.js` | `Uitsnijden.kies(titel)`: bestandskiezer + `<dialog>` om jezelf in een rondje uit te snijden (slepen, zoomen met schuif/wiel/twee vingers); geeft een JPEG van 200 × 200 px. "Kies een andere foto" opent de kiezer opnieuw vanuit de dialoog (annuleren daarvan houdt de huidige foto). Eén vaste, verborgen file-input in de pagina: een losse werd op iOS Safari soms opgeruimd, waarna de gekozen foto nooit aankwam (23 november 2026). Grote foto's worden bij het inlezen verkleind tot 2000 px. Gebruikt op `inschrijven.html` |
 | `reunie25/theme.css` | Stijl; kleuren van scoutingbrandevoort.nl (#2c4696) en het logo (geel). Licht/donker volgt het systeem |
 
 ## Reünie
