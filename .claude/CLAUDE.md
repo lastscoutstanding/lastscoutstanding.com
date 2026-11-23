@@ -2,7 +2,7 @@
 
 Domein van Bas. Nu vooral de site voor de reünie van 25 jaar Scouting Brandevoort (Helmond) in `reunie25/`; de root stuurt daarheen door.
 Repo: github.com/lastscoutstanding/lastscoutstanding.com, gehost op GitHub Pages (lastscoutstanding.com, via `CNAME`).
-Stand: 22 november 2026.
+Stand: 23 november 2026.
 
 ## Werkwijze in Claude Code
 
@@ -27,7 +27,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/herinneringen.html` | Herinneringen (menu na "Wie doen er mee?"): tabblad Verhalen (lezen, zoeken/filteren, delen, eigen verhaal aanpassen/verwijderen, "Meld het") en Foto's (`#fotos`: grid, groot bekijken met pijltjes/vegen, meerdere tegelijk delen, eigen foto verwijderen, "Meld het"), met hartjes bij beide. Alleen voor deelnemers en comité; anderen zien een teaser met het aantal |
 | `reunie25/programma.html` + `programma.txt` | Programma (`tijd | omschrijving`, andere regels = alinea) |
 | `reunie25/vragen.html` + `vragen.txt` | FAQ (`V:` / `A:`); `{bedrag}` = bedrag uit `betalen.txt`, e-mailadressen worden links |
-| `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: tegels, zoeken, filters te combineren (erbij / betaald / nieuw deze week), kolom "Erbij?" met keuzelijst + "sinds", details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Te beoordelen (`#beoordelen`): foto's per inzending (plaatsen / afwijzen = wissen, "Alle N plaatsen"), opslaggebruik, en nieuwe/aangepaste en gemelde verhalen plaatsen, afwijzen (met opmerking), aanpassen, verwijderen. Tabblad Overleg (`#overleg`, `#overleg-<id>`): comité-chat, zie "Overleg". Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
+| `reunie25/beheer.html` | Comité. Tabblad Inschrijvingen: tegels, zoeken, filters te combineren (erbij / betaald / nieuw deze week), kolom "Erbij?" met keuzelijst + "sinds", details, verwijderen (+ blokkeren, `<dialog>`), CSV, adressen kopiëren, betaald afvinken. Tabblad Te beoordelen (`#beoordelen`): foto's per inzending (plaatsen / afwijzen met toelichting, "Alle N plaatsen"), opslaggebruik, en nieuwe/aangepaste en gemelde verhalen plaatsen, afwijzen (met opmerking), aanpassen, verwijderen. Tabblad Overleg (`#overleg`, `#overleg-<id>`): comité-chat, zie "Overleg". Tabblad Comité (`#comite`): lijst, hoofdbeheerder voegt beheerders toe/haalt weg, geblokkeerde adressen (deblokkeren), tabel "Wie mag wat?". Link "Beheer" alleen voor beheerders (`Data.beheerder()`, rol via `Data.rol()`) |
 | `reunie25/reunie.ics` | Agendabestand (14:00–19:00, Europe/Amsterdam); `Reunie.agenda()` maakt de links "Zet in je agenda" + Google Agenda (home, programma, mijn). Bevat het volledige adres van de site |
 | `reunie25/betalen.txt` | Bedrag, betaallink, IBAN voor het betaalblok op `mijn.html`; leeg = geen blok |
 | `reunie25/over.html` | "Over deze site" (link in de footer): gemaakt door Peter (“Peter Limonade”) en Claude samen; tijdens gebruik kijkt geen AI mee |
@@ -112,7 +112,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - Per foto: titel, jaar, speltak (filter zoals op "Wie doen er mee?"), "gedeeld door". Knop "Sta jij hierop…?" verbergt een foto en meldt het aan het comité.
 - Verkleinen in de browser vóór upload: 1600 px (~200–350 KB) + miniatuur 400 px (~50 KB); opnieuw opslaan haalt ook GPS/EXIF weg. Supabase Free: 1 GB opslag, 5 GB verkeer per maand. Max. 30 foto's per persoon (trigger `fotos_stempel`).
 - Opslag: privé-bucket `fotos` (alleen JPEG, max. 1 MB), bestanden `<auteur>/<id>.jpg` en `-klein.jpg`; tabel `fotos` met status nieuw/geplaatst/gemeld. Bekijken via ondertekende links (1 uur geldig). Bestanden wist de site via de Storage API (ook bij uitschrijven en bij verwijderen door het comité); SQL kan dat niet.
-- Afwijzen = de foto wordt gewist (geen "niet geplaatst" zoals bij verhalen).
+- Afwijzen (23 november 2026, na mockup; eerst werd de foto zonder bericht gewist): het comité kiest "Afwijzen…" (nieuw) of "Verwijderen…" (gemeld) en schrijft in een `<dialog>` een optionele toelichting (≤ 500). `beoordeel_foto(foto, 'afwijzen', notitie)` zet status `afgewezen` + `toelichting` en wist de hartjes; de site wist meteen de grote foto, alleen de miniatuur (~50 KB) blijft. De deler ziet bovenaan het tabblad Foto's een blok "Niet geplaatst" (miniatuur + "Het comité schreef: …") met "Oké, weghalen" (wist rij en miniatuur), en op `mijn.html` een regel "1 foto is niet geplaatst". Afgewezen foto's staan niet in `fotos_lijst()` en tellen niet mee voor de 30. Bij een gemelde foto zegt de dialoog: noem niet wie hem meldde. Actie `verwijderen` bestaat nog in de functie, maar de site gebruikt hem niet meer.
 - Aanpassen (20 november 2026): uploader en comité wijzigen titel, speltak en jaar in de grote weergave (`bewerk_foto()`). Geen nieuwe beoordeling, want de foto zelf verandert niet. Een andere foto = verwijderen en opnieuw delen, en die gaat wel langs het comité.
 - DEMO: rijen in `reunie25.demo.fotos`, geüploade bestanden alleen in het geheugen (na herladen een gekleurd vlak).
 - Let op bij testen: een browsertabblad op de achtergrond kan het verkleinen pauzeren.
@@ -142,6 +142,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [ ] "Ben je erbij?" live testen als deelnemer (keuze wijzigen op Mijn inschrijving) en op Beheer; agendabestand testen in Apple Agenda en Google Agenda.
 - [x] Schema opnieuw gedraaid (bolletjes), 22 november 2026. Bolletjes nog live testen zodra er iets nieuws binnenkomt.
 - [x] Schema opnieuw gedraaid (oude speltaknamen), 22 november 2026.
+- [ ] Schema opnieuw draaien (foto's afwijzen met toelichting, 23 november 2026); daarna live testen: afwijzen, blok bij de deler, "Oké, weghalen", opslag van de grote foto weg.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).

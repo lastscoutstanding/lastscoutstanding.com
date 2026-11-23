@@ -566,13 +566,19 @@ create table if not exists public.fotos (
   jaar        int check (jaar between 1990 and 2030),
   toon_naam   boolean not null default true,
   breedte     int, hoogte int,
-  status      text not null default 'nieuw' check (status in ('nieuw', 'geplaatst', 'gemeld')),
+  status      text not null default 'nieuw' check (status in ('nieuw', 'geplaatst', 'gemeld', 'afgewezen')),
   melding     text check (char_length(melding) <= 500),
   gemeld_door text,
   gemeld_op   date,
   aangemaakt  timestamptz not null default now()
 );
 alter table public.fotos enable row level security;
+
+-- Rejected photos (status 'afgewezen'): the comité wrote a toelichting, the big file is gone and
+-- only the thumbnail stays, so the uploader sees which photo it was. "Oké, weghalen" removes it.
+alter table public.fotos add column if not exists toelichting text check (char_length(toelichting) <= 500);
+alter table public.fotos drop constraint if exists fotos_status_check;
+alter table public.fotos add constraint fotos_status_check check (status in ('nieuw', 'geplaatst', 'gemeld', 'afgewezen'));
 
 -- When a photo last needed the comité (upload or report), for the "new since you looked" badges.
 alter table public.fotos add column if not exists bijgewerkt timestamptz;
@@ -585,11 +591,11 @@ language plpgsql security definer set search_path = public
 as $$
 begin
   if auth.uid() is null or current_setting('reunie.comite', true) = '1' then return new; end if;
-  if (select count(*) from fotos where auteur = auth.uid()) >= 30 then
+  if (select count(*) from fotos where auteur = auth.uid() and status <> 'afgewezen') >= 30 then
     raise exception 'max' using errcode = '22023';
   end if;
   new.auteur := auth.uid(); new.status := 'nieuw'; new.aangemaakt := now(); new.bijgewerkt := now();
-  new.melding := null; new.gemeld_door := null; new.gemeld_op := null;
+  new.melding := null; new.gemeld_door := null; new.gemeld_op := null; new.toelichting := null;
   if new.pad not like auth.uid()::text || '/%' then raise exception 'pad' using errcode = '22023'; end if;
   return new;
 end;
@@ -657,7 +663,7 @@ begin
            case when f.toon_naam and d.toon_achternaam and d.achternaam <> '' then d.achternaam end,
            f.breedte, f.hoogte, f.aangemaakt
     from fotos f left join deelnemers d on d.id = f.auteur
-    where f.status = 'geplaatst' or f.auteur = auth.uid()
+    where f.status = 'geplaatst' or (f.auteur = auth.uid() and f.status <> 'afgewezen')
     order by f.aangemaakt desc, f.id;
 end;
 $$;
@@ -693,9 +699,11 @@ begin
 end;
 $$;
 
--- Comité: actie 'plaatsen' or 'verwijderen'. Returns the pad of a removed photo, so the site
--- can delete its files.
-create or replace function public.beoordeel_foto(foto uuid, actie text)
+-- Comité: actie 'plaatsen', 'afwijzen' (with notitie for the uploader) or 'verwijderen'.
+-- Returns the pad of a rejected or removed photo, so the site can delete its files: on
+-- afwijzen only the big one, the thumbnail stays for the uploader.
+drop function if exists public.beoordeel_foto(uuid, text);
+create or replace function public.beoordeel_foto(foto uuid, actie text, notitie text default null)
 returns text
 language plpgsql security definer set search_path = public
 as $$
@@ -706,6 +714,11 @@ begin
   perform set_config('reunie.comite', '1', true);
   if actie = 'plaatsen' then
     update fotos set status = 'geplaatst', melding = null, gemeld_door = null, gemeld_op = null where id = foto;
+  elsif actie = 'afwijzen' then
+    update fotos set status = 'afgewezen', toelichting = left(nullif(trim(notitie), ''), 500),
+                     melding = null, gemeld_door = null, gemeld_op = null, bijgewerkt = now()
+      where id = foto and status in ('nieuw', 'gemeld') returning pad into weg;
+    delete from hartjes h where h.foto = beoordeel_foto.foto;
   elsif actie = 'verwijderen' then
     delete from fotos where id = foto returning pad into weg;
   else
@@ -761,7 +774,7 @@ revoke all on function public.aantal_fotos() from public, anon, authenticated;
 revoke all on function public.fotos_lijst() from public, anon, authenticated;
 revoke all on function public.meld_foto(uuid, text) from public, anon, authenticated;
 revoke all on function public.fotos_te_beoordelen() from public, anon, authenticated;
-revoke all on function public.beoordeel_foto(uuid, text) from public, anon, authenticated;
+revoke all on function public.beoordeel_foto(uuid, text, text) from public, anon, authenticated;
 revoke all on function public.foto_opslag() from public, anon, authenticated;
 revoke all on function public.fotos_van(uuid) from public, anon, authenticated;
 revoke all on function public.bewerk_foto(uuid, text, text, int) from public, anon, authenticated;
@@ -770,7 +783,7 @@ grant execute on function public.aantal_fotos() to anon, authenticated;
 grant execute on function public.fotos_lijst() to authenticated;
 grant execute on function public.meld_foto(uuid, text) to authenticated;
 grant execute on function public.fotos_te_beoordelen() to authenticated;
-grant execute on function public.beoordeel_foto(uuid, text) to authenticated;
+grant execute on function public.beoordeel_foto(uuid, text, text) to authenticated;
 grant execute on function public.foto_opslag() to authenticated;
 grant execute on function public.fotos_van(uuid) to authenticated;
 grant execute on function public.bewerk_foto(uuid, text, text, int) to authenticated;
