@@ -157,7 +157,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (foto's afwijzen met toelichting), 23 november 2026.
 - [x] Foto afwijzen live getest door Bas (afwijzen met toelichting, blok bij de deler, "Oké, weghalen"), 23 november 2026.
 - [x] Schema opnieuw gedraaid (profielfoto's toen en nu), 23 november 2026; `publieke_deelnemers` live gecontroleerd (nieuwe kolommen, leeg voor bezoekers).
-- [ ] Profielfoto's live testen: foto kiezen bij inschrijven en bij aanpassen, zichtbaar ingelogd en niet als bezoeker, melden, weer tonen/weghalen op Beheer, uitschrijven met profielfoto.
+- [x] Profielfoto's live getest door Bas, ook de opmaak in Chrome en Safari (23 november 2026).
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).
