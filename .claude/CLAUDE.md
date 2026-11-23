@@ -42,6 +42,7 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 | `reunie25/nav.js` | Kop (blauwe band met logo, titel en datum) + lichte menubalk eronder (sticky, actieve pagina geel onderstreept, "Mijn inschrijving →" / "Inloggen →" vast rechts; onder 760 px één veegbare regel met vervaagde randen en "Mijn →"), footer, testversie-balk bij DEMO |
 | `reunie25/logo.svg`, `logo-wit.svg` | Logo als vector, zie "Reünie" |
 | `reunie25/overleg.js` | Overleg-knopjes (💬) voor het comité bij deelnemers, verhalen, foto's en onderaan elke pagina, en de dialoog "Nieuw overleg". Herinneringen en Beheer laden het zelf; op andere pagina's laadt `nav.js` het voor comitéleden |
+| `reunie25/uitsnijden.js` | `Uitsnijden.kies(titel)`: bestandskiezer + `<dialog>` om jezelf in een rondje uit te snijden (slepen, zoomen met schuif/wiel/twee vingers); geeft een JPEG van 200 × 200 px. Gebruikt op `inschrijven.html` |
 | `reunie25/theme.css` | Stijl; kleuren van scoutingbrandevoort.nl (#2c4696) en het logo (geel). Licht/donker volgt het systeem |
 
 ## Reünie
@@ -104,6 +105,17 @@ Vanilla HTML/CSS/JS, geen build-stap. Alleen relatieve paden, zodat `reunie25/` 
 - `mijn.html`: blok "Jouw herinneringen" met het totaal aantal hartjes op je eigen verhalen en foto's, alleen als het er meer dan 0 zijn.
 - DEMO: `reunie25.demo.hartjes`, met voorbeeldhartjes van verzonnen deelnemers.
 
+## Profielfoto's toen en nu (gebouwd 23 november 2026, na mockup)
+
+- Optioneel een rond fotootje van toen en een van nu op je kaartje. Kiezen op "Doe mee" / "Gegevens aanpassen" (blok Foto's, `#fotos`) via `uitsnijden.js`: alleen het uitgesneden rondje (200 px, ~15 KB) wordt verstuurd, het origineel blijft op het apparaat. Ophalen van Facebook/LinkedIn/Instagram bewust niet (login-koppeling nodig, en het laden van hun servers zou bezoekers volgen).
+- Alleen ingelogde deelnemers en het comité zien ze: `publieke_deelnemers()` geeft `foto_toen`/`foto_nu` (pad) alleen bij `mag_verhalen()`; de pagina's sturen daarvoor het token mee. Bezoekers zien het kaartje zoals voorheen.
+- Waar: kaartje op "Wie doen er mee?" (beide: toen klein achter nu; tik = grote weergave met "Meld het", comité "Weghalen"), je eigen kaartje op `mijn.html` (met noot als een foto gemeld is, of een uitnodiging om er een toe te voegen), klein in de naam-pills op de home (nu, anders toen).
+- Geen controle vooraf. "Meld het" verbergt meteen (beide foto's van die persoon); het comité ziet ze bij Te beoordelen → Foto's → Profielfoto's: "Weer tonen" of "Weghalen…". Telt mee in de bolletjes.
+- Tabel `profielfotos` (`pad` = `profiel/<uuid>`, `auteur`, `soort` toen/nu, `status` zichtbaar/gemeld, melding…). Bestand `profiel/<uuid>.jpg` in de bucket `fotos`, bewust zonder user-id in het pad: anders zou je anonieme foto's bij Herinneringen aan iemand kunnen koppelen. Eerst de rij, dan het bestand (opslagregel `mijn_profielfoto_bestand()`); wissen andersom. Een nieuwe foto = nieuwe rij + bestand, daarna gaat de oude weg. Max. 6 rijen per persoon (trigger).
+- Nieuwe inschrijving: de rondjes wachten als data-URL in sessionStorage (`reunie25.profiel`) tot de code is ingevuld; `inloggen.html` verstuurt ze na `Data.bewaar`.
+- Gaan mee weg bij uitschrijven, verwijderen door het comité (`fotos_van()` geeft ook deze paden) en het grote wissen.
+- DEMO: `reunie25.demo.profiel` (afbeelding als data-URL); getekende voorbeeldgezichtjes bij Lotte, Mark, Tim, Bram, Noor en Ruud.
+
 ## Foto's (gebouwd 19 november 2026)
 
 Besloten op 18 en 19 november 2026, na mockups:
@@ -134,7 +146,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Menu op telefoon: één veegbare regel in plaats van drie regels (20 november 2026, na mockup).
 - [x] Privacyverklaring af (18 november 2026): contact Reüniecomité, Blokhut de Brandnetel, Brandevoort 13-A, 5706 KA Helmond, reunie@scoutingbrandevoort.nl; alles gewist uiterlijk 23 augustus 2027. Bij de foto's de verklaring aanvullen.
 - [x] Schema opnieuw gedraaid (verwijderen/blokkeren), 19 november 2026.
-- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `hartjes`, `gesprekken`, `berichten`, `gezien`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
+- [ ] Gegevens wissen uiterlijk 23 augustus 2027, met de hand (tabellen `deelnemers`, `beheerders`, `geblokkeerd`, `verhalen`, `fotos`, `profielfotos`, `hartjes`, `gesprekken`, `berichten`, `gezien`, de bucket `fotos` en de logins in Supabase). Er wordt niets automatisch gewist.
 - [x] Schema opnieuw gedraaid (overleg + `aantal_te_beoordelen`), 20 november 2026.
 - [x] Schema opnieuw gedraaid (gesprek verwijderen), 21 november 2026.
 - [x] Schema opnieuw gedraaid (hartjes), 21 november 2026.
@@ -144,6 +156,7 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [x] Schema opnieuw gedraaid (oude speltaknamen), 22 november 2026.
 - [x] Schema opnieuw gedraaid (foto's afwijzen met toelichting), 23 november 2026.
 - [x] Foto afwijzen live getest door Bas (afwijzen met toelichting, blok bij de deler, "Oké, weghalen"), 23 november 2026.
+- [ ] Schema opnieuw draaien (profielfoto's toen en nu, 23 november 2026); daarna live testen: foto kiezen bij inschrijven en bij aanpassen, zichtbaar ingelogd en niet als bezoeker, melden, weer tonen/weghalen op Beheer, uitschrijven met profielfoto.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).

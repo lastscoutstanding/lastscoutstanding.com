@@ -238,21 +238,33 @@ create policy "eigen verhaal verwijderen" on public.verhalen
 -- ---------------------------------------------------------------- public functions
 
 -- Everyone who shows at least something, with hidden fields as null. Oldest first.
--- Dropped first because the returned columns changed (bijnaam); grants are set again below.
+-- foto_toen / foto_nu: file path (without .jpg) of the profile photos, only for logged-in
+-- participants and the comité (see "profile photos" below); null for visitors.
+-- Dropped first because the returned columns changed; grants are set again below.
+-- plpgsql, so it may refer to public.profielfotos, which is created further down.
 drop function if exists public.publieke_deelnemers();
 create function public.publieke_deelnemers()
-returns table (voornaam text, achternaam text, bijnaam text, geboortejaar int, takken jsonb)
-language sql stable security definer set search_path = public
+returns table (voornaam text, achternaam text, bijnaam text, geboortejaar int, takken jsonb, foto_toen text, foto_nu text)
+language plpgsql stable security definer set search_path = public
 as $$
-  select case when toon_voornaam then voornaam end,
-         case when toon_achternaam and achternaam <> '' then achternaam end,
-         case when toon_bijnaam and bijnaam <> '' then bijnaam end,
-         case when toon_leeftijd then geboortejaar end,
-         case when toon_takken and jsonb_array_length(takken) > 0 then takken end
-  from deelnemers
-  where toon_voornaam or (toon_achternaam and achternaam <> '') or (toon_bijnaam and bijnaam <> '') or toon_leeftijd
-     or (toon_takken and jsonb_array_length(takken) > 0)
-  order by aangemaakt;
+declare
+  kijk boolean := mag_verhalen();
+begin
+  return query
+  select case when d.toon_voornaam then d.voornaam end,
+         case when d.toon_achternaam and d.achternaam <> '' then d.achternaam end,
+         case when d.toon_bijnaam and d.bijnaam <> '' then d.bijnaam end,
+         case when d.toon_leeftijd then d.geboortejaar end,
+         case when d.toon_takken and jsonb_array_length(d.takken) > 0 then d.takken end,
+         case when kijk then (select p.pad from profielfotos p where p.auteur = d.id and p.soort = 'toen'
+                                and p.status = 'zichtbaar' order by p.aangemaakt desc limit 1) end,
+         case when kijk then (select p.pad from profielfotos p where p.auteur = d.id and p.soort = 'nu'
+                                and p.status = 'zichtbaar' order by p.aangemaakt desc limit 1) end
+  from deelnemers d
+  where d.toon_voornaam or (d.toon_achternaam and d.achternaam <> '') or (d.toon_bijnaam and d.bijnaam <> '') or d.toon_leeftijd
+     or (d.toon_takken and jsonb_array_length(d.takken) > 0)
+  order by d.aangemaakt;
+end;
 $$;
 
 create or replace function public.aantal_deelnemers()
@@ -616,13 +628,20 @@ create policy "eigen foto verwijderen" on public.fotos
   for delete to authenticated using (auteur = auth.uid());
 
 -- May the logged-in user see this file? Your own, placed ones (participants) and all (comité).
+-- Also profile photos: your own, visible ones (participants) and all (comité).
+-- plpgsql, so it may refer to public.profielfotos, which is created further down.
 create or replace function public.foto_zichtbaar(naam text)
 returns boolean
-language sql stable security definer set search_path = public
+language plpgsql stable security definer set search_path = public
 as $$
-  select exists (select 1 from fotos f
+begin
+  return exists (select 1 from fotos f
     where naam in (f.pad || '.jpg', f.pad || '-klein.jpg')
-      and (f.auteur = auth.uid() or public.is_beheerder() or (f.status = 'geplaatst' and public.mag_verhalen())));
+      and (f.auteur = auth.uid() or public.is_beheerder() or (f.status = 'geplaatst' and public.mag_verhalen())))
+  or exists (select 1 from profielfotos p
+    where naam = p.pad || '.jpg'
+      and (p.auteur = auth.uid() or public.is_beheerder() or (p.status = 'zichtbaar' and public.mag_verhalen())));
+end;
 $$;
 
 drop policy if exists "fotos uploaden" on storage.objects;
@@ -747,7 +766,8 @@ language plpgsql stable security definer set search_path = public
 as $$
 begin
   if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
-  return query select pad from fotos where auteur = deelnemer;
+  return query select pad from fotos where auteur = deelnemer
+               union all select pad from profielfotos where auteur = deelnemer;
 end;
 $$;
 
@@ -788,16 +808,146 @@ grant execute on function public.foto_opslag() to authenticated;
 grant execute on function public.fotos_van(uuid) to authenticated;
 grant execute on function public.bewerk_foto(uuid, text, text, int) to authenticated;
 
+-- ---------------------------------------------------------------- profile photos (toen en nu)
+-- Optional round photos on the card on "Wie doen er mee?": one of toen (scouting days) and
+-- one of nu. Cut out in the browser (200 px); only that circle is uploaded. File in the bucket
+-- "fotos" at profiel/<random>.jpg: no user id in the path, so it cannot be linked to the
+-- anonymous photos at Herinneringen. Visible to participants and the comité only (via
+-- publieke_deelnemers), without review; "Meld het" hides one until the comité decides.
+-- A new photo is a new row and file; the site then removes the older one of that soort.
+
+create table if not exists public.profielfotos (
+  pad         text primary key check (pad ~ '^profiel/[0-9a-f-]{36}$'),
+  auteur      uuid not null references auth.users (id) on delete cascade,
+  soort       text not null check (soort in ('toen', 'nu')),
+  status      text not null default 'zichtbaar' check (status in ('zichtbaar', 'gemeld')),
+  melding     text check (char_length(melding) <= 500),
+  gemeld_door text,
+  gemeld_op   date,
+  aangemaakt  timestamptz not null default now(),
+  bijgewerkt  timestamptz not null default now()
+);
+alter table public.profielfotos enable row level security;
+
+create or replace function public.profielfotos_stempel()
+returns trigger
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not exists (select 1 from deelnemers where id = auth.uid()) then
+    raise exception 'alleen voor deelnemers' using errcode = '42501';
+  end if;
+  if (select count(*) from profielfotos where auteur = auth.uid()) >= 6 then
+    raise exception 'max' using errcode = '22023';
+  end if;
+  new.auteur := auth.uid(); new.status := 'zichtbaar'; new.aangemaakt := now(); new.bijgewerkt := now();
+  new.melding := null; new.gemeld_door := null; new.gemeld_op := null;
+  return new;
+end;
+$$;
+
+drop trigger if exists profielfotos_stempel on public.profielfotos;
+create trigger profielfotos_stempel before insert on public.profielfotos
+  for each row execute function public.profielfotos_stempel();
+
+drop policy if exists "eigen profielfotos lezen" on public.profielfotos;
+create policy "eigen profielfotos lezen" on public.profielfotos
+  for select to authenticated using (auteur = auth.uid());
+drop policy if exists "profielfoto maken" on public.profielfotos;
+create policy "profielfoto maken" on public.profielfotos
+  for insert to authenticated with check (auteur = auth.uid());
+drop policy if exists "eigen profielfoto verwijderen" on public.profielfotos;
+create policy "eigen profielfoto verwijderen" on public.profielfotos
+  for delete to authenticated using (auteur = auth.uid());
+
+-- Is this file one of your own profile photos? The row comes first, then the file; the site
+-- deletes the file before the row.
+create or replace function public.mijn_profielfoto_bestand(naam text)
+returns boolean
+language sql stable security definer set search_path = public
+as $$ select exists (select 1 from profielfotos p where naam = p.pad || '.jpg' and p.auteur = auth.uid()); $$;
+
+drop policy if exists "profielfoto uploaden" on storage.objects;
+create policy "profielfoto uploaden" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'fotos' and public.mijn_profielfoto_bestand(name));
+drop policy if exists "profielfoto verwijderen" on storage.objects;
+create policy "profielfoto verwijderen" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'fotos' and public.mijn_profielfoto_bestand(name));
+
+-- Participants: report a profile photo. It is hidden at once, until the comité decides.
+create or replace function public.meld_profielfoto(foto text, reden text default null)
+returns void
+language plpgsql security definer set search_path = public
+as $$
+begin
+  if not mag_verhalen() then raise exception 'alleen voor deelnemers' using errcode = '42501'; end if;
+  update profielfotos set status = 'gemeld', melding = left(nullif(trim(reden), ''), 500),
+                          gemeld_door = mijn_naam(), gemeld_op = current_date, bijgewerkt = now()
+    where pad = foto and status = 'zichtbaar';
+end;
+$$;
+
+-- Comité: reported profile photos, oldest report first.
+create or replace function public.profielfotos_te_beoordelen()
+returns table (pad text, soort text, melding text, gemeld_door text, gemeld_op date, auteur_naam text, bijgewerkt timestamptz)
+language plpgsql stable security definer set search_path = public
+as $$
+#variable_conflict use_column
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  return query
+    select p.pad, p.soort, p.melding, p.gemeld_door, p.gemeld_op,
+           coalesce(nullif(trim(d.voornaam || ' ' || d.achternaam), ''), u.email::text), p.bijgewerkt
+    from profielfotos p left join deelnemers d on d.id = p.auteur left join auth.users u on u.id = p.auteur
+    where p.status = 'gemeld'
+    order by p.bijgewerkt, p.pad;
+end;
+$$;
+
+-- Comité: actie 'tonen' (visible again) or 'weghalen'. Returns the pad of a removed photo, so
+-- the site can delete its file.
+create or replace function public.beoordeel_profielfoto(foto text, actie text)
+returns text
+language plpgsql security definer set search_path = public
+as $$
+declare
+  weg text;
+begin
+  if not is_beheerder() then raise exception 'alleen voor het comite' using errcode = '42501'; end if;
+  if actie = 'tonen' then
+    update profielfotos set status = 'zichtbaar', melding = null, gemeld_door = null, gemeld_op = null where pad = foto;
+  elsif actie = 'weghalen' then
+    delete from profielfotos where pad = foto returning pad into weg;
+  else
+    raise exception 'onbekende actie' using errcode = '22023';
+  end if;
+  return weg;
+end;
+$$;
+
+revoke all on function public.profielfotos_stempel() from public, anon, authenticated;
+revoke all on function public.mijn_profielfoto_bestand(text) from public, anon, authenticated;
+revoke all on function public.meld_profielfoto(text, text) from public, anon, authenticated;
+revoke all on function public.profielfotos_te_beoordelen() from public, anon, authenticated;
+revoke all on function public.beoordeel_profielfoto(text, text) from public, anon, authenticated;
+grant execute on function public.mijn_profielfoto_bestand(text) to authenticated;
+grant execute on function public.meld_profielfoto(text, text) to authenticated;
+grant execute on function public.profielfotos_te_beoordelen() to authenticated;
+grant execute on function public.beoordeel_profielfoto(text, text) to authenticated;
+
 -- ---------------------------------------------------------------- comité: to review, and overleg
 
--- Comité: number of stories and photos waiting for a decision (new or reported); 0 for others.
+-- Comité: number of stories, photos and profile photos waiting for a decision (new or reported); 0 for others.
 create or replace function public.aantal_te_beoordelen()
 returns int
 language sql stable security definer set search_path = public
 as $$
   select case when not is_beheerder() then 0 else
     (select count(*)::int from verhalen where status in ('nieuw', 'gemeld'))
-    + (select count(*)::int from fotos where status in ('nieuw', 'gemeld')) end;
+    + (select count(*)::int from fotos where status in ('nieuw', 'gemeld'))
+    + (select count(*)::int from profielfotos where status = 'gemeld') end;
 $$;
 
 -- Overleg: conversations of the comité, optionally about a participant, story, photo or page.
@@ -1000,7 +1150,8 @@ begin
                    or exists (select 1 from berichten m where m.gesprek = g.id and not m.systeem
                               and m.auteur is distinct from ik and m.aangemaakt > coalesce(z.tijd, grens))),
     'beoordelen_nieuw', (select count(*)::int from verhalen where status in ('nieuw', 'gemeld') and bijgewerkt > b)
-                      + (select count(*)::int from fotos where status in ('nieuw', 'gemeld') and bijgewerkt > b),
+                      + (select count(*)::int from fotos where status in ('nieuw', 'gemeld') and bijgewerkt > b)
+                      + (select count(*)::int from profielfotos where status = 'gemeld' and bijgewerkt > b),
     'beoordelen', aantal_te_beoordelen());
 end;
 $$;
