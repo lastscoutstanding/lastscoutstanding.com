@@ -142,7 +142,8 @@ Besloten op 18 en 19 november 2026, na mockups:
 - [ ] "Ben je erbij?" live testen als deelnemer (keuze wijzigen op Mijn inschrijving) en op Beheer; agendabestand testen in Apple Agenda en Google Agenda.
 - [x] Schema opnieuw gedraaid (bolletjes), 22 november 2026. Bolletjes nog live testen zodra er iets nieuws binnenkomt.
 - [x] Schema opnieuw gedraaid (oude speltaknamen), 22 november 2026.
-- [ ] Schema opnieuw draaien (foto's afwijzen met toelichting, 23 november 2026); daarna live testen: afwijzen, blok bij de deler, "Oké, weghalen", opslag van de grote foto weg.
+- [x] Schema opnieuw gedraaid (foto's afwijzen met toelichting), 23 november 2026.
+- [ ] Foto afwijzen live testen: afwijzen met toelichting, blok bij de deler, "Oké, weghalen", opslag van de grote foto weg.
 - [ ] Leeftijdsgrens bepalen; dan controle op geboortejaar in het formulier en een vraag in `vragen.txt`.
 - [ ] Hartjes live testen (geven, weghalen, eigen item, blok op Mijn inschrijving).
 - [ ] Programma en vragen verder invullen (`programma.txt`, `vragen.txt`); tijden 14:00–19:00 staan erin (22 november 2026).
