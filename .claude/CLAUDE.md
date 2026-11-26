@@ -2,7 +2,7 @@
 
 Domein van Bas. Hier stond tot de verhuizing de site voor de reünie van 25 jaar Scouting Brandevoort; die staat nu in de eigen repo `lastscoutstanding/reunie25` op https://reunie.scoutingbrandevoort.nl (lokaal `~/Websites/reunie25`, met een eigen `.claude/CLAUDE.md`). Werk aan de reünie hoort dáár.
 Repo: github.com/lastscoutstanding/lastscoutstanding.com, gehost op GitHub Pages (lastscoutstanding.com, via `CNAME`).
-Stand: 26 november 2026 (voorbereid op tak `overstap`; geldt zodra die in `main` staat).
+Stand: 26 november 2026 (verhuizing afgerond).
 
 ## Werkwijze in Claude Code
 
@@ -23,7 +23,7 @@ De geschiedenis van de reüniesite (tot de verhuizing) staat ook in deze repo; i
 
 ## DNS (Webreus)
 
-Records voor GitHub Pages en Resend (afzender noreply@lastscoutstanding.com voor de inlogmails van de reünie) staan beschreven in `_docs/beheer.md` in de repo `reunie25`. Niet aankomen zolang de reüniesite mail verstuurt. Het testrecord `reunie` (CNAME) mag weg na de overstap.
+Records voor GitHub Pages en Resend (afzender noreply@lastscoutstanding.com voor de inlogmails van de reünie) staan beschreven in `_docs/beheer.md` in de repo `reunie25`. Niet aankomen zolang de reüniesite mail verstuurt. Het testrecord `reunie` (CNAME) is weggehaald (26 november 2026).
 
 ## Open punten
 
