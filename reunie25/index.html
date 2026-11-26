@@ -1,128 +1,18 @@
 <!DOCTYPE html>
 <html lang="nl">
 <head>
-<meta charset="UTF-8">
+<meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Reünie 25 jaar Scouting Brandevoort</title>
-<meta name="description" content="Reünie 25 jaar Scouting Brandevoort, zondag 23 mei 2027 van 14:00 tot 19:00 in blokhut de Brandnetel, Helmond. Doe mee en zie wie er nog meer meedoen.">
-<link rel="stylesheet" href="theme.css">
+<!-- The reunion site moved to reunie.scoutingbrandevoort.nl; this page forwards old links, keeping page, query and hash. -->
+<link rel="canonical" href="https://reunie.scoutingbrandevoort.nl/">
+<script>
+  location.replace("https://reunie.scoutingbrandevoort.nl" +
+    location.pathname.replace(/^\/reunie25/, "") + location.search + location.hash);
+</script>
+<meta http-equiv="refresh" content="1; url=https://reunie.scoutingbrandevoort.nl/">
 </head>
 <body>
-<header id="kop"></header>
-<main>
-  <div class="hero">
-    <div class="card">
-      <span class="pill">2001 – 2026</span>
-      <h1>Welkom terug!</h1>
-      <p class="date">Reünie · zondag 23 mei 2027 · 14:00 – 19:00 · blokhut de Brandnetel, Helmond</p>
-      <p class="agenda" id="agenda"></p>
-      <div class="count" id="count"></div>
-      <p class="muted">Ben of was jij bever, welp, scout, explorer, roverscout, vuurvogel, plusscout of leiding? Kom naar de Brandnetel, doe mee en zie wie er nog meer meedoen. Weet je nog niet of je kunt? Doe toch mee en deel je herinneringen.</p>
-      <div class="row">
-        <a class="btn" href="inschrijven.html" id="cta">Doe mee</a>
-        <a class="btn ghost" href="deelnemers.html">Wie doen er mee?</a>
-      </div>
-    </div>
-    <div class="card">
-      <div class="stat" id="stat">&nbsp;</div>
-      <p class="muted" style="margin:6px 0 0" id="stat-sub"></p>
-      <div class="faces" id="faces"></div>
-      <p style="margin-top:16px"><small class="muted">Ken je iemand van vroeger? Stuur deze pagina door.</small></p>
-    </div>
-  </div>
-  <section class="nieuwst" id="nieuwst" hidden>
-    <h2>Nieuw bij Herinneringen</h2>
-    <div id="nieuwst-in"></div>
-  </section>
-  <div class="grid3">
-    <a class="card" href="programma.html"><h2>Programma</h2><p class="muted" style="margin:0">Tijden en wat je mee moet nemen.</p></a>
-    <a class="card" href="deelnemers.html"><h2>Wie doen er mee?</h2><p class="muted" style="margin:0">Zoek leden en leiding van nu en toen, per speltak en jaar.</p></a>
-    <a class="card" href="vragen.html"><h2>Vragen</h2><p class="muted" style="margin:0">Kosten, parkeren, introducés en contact.</p></a>
-  </div>
-</main>
-<footer id="voet"></footer>
-<script src="reunie.js"></script>
-<script src="data.js"></script>
-<script src="nav.js"></script>
-<script>
-  const dagen = Math.ceil((Reunie.DATUM - new Date()) / 864e5);
-  $('count').innerHTML = dagen > 0
-    ? `<div><strong>${dagen}</strong><span>dagen</span></div><div><strong>${Math.floor(dagen / 7)}</strong><span>weken</span></div>`
-    : dagen === 0 ? '<div><strong>Vandaag!</strong><span>tot straks</span></div>' : '';
-  $('agenda').innerHTML = Reunie.agenda();
-  if (Data.ingelogd()) { $('cta').textContent = 'Mijn inschrijving'; $('cta').href = 'mijn.html'; }
-
-  (async () => {
-    await Reunie.laadSpeltakken();
-    const [{ totaal, erbij, personen }, ik] = await Promise.all([Data.deelnemers(), Data.ingelogd() ? Data.ik().catch(() => null) : null]);
-    const isZelf = Reunie.zelf(ik);
-    if (!totaal) { $('stat').textContent = 'Nog niemand!'; $('stat-sub').textContent = 'Doe mee en wees de eerste.'; return; }
-    $('stat').innerHTML = `<b>${totaal}</b> ${totaal === 1 ? 'scout van nu en toen doet' : 'scouts van nu en toen doen'} mee`;
-    $('stat-sub').textContent = `${Reunie.erbijTekst(erbij)}. ${Data.ingelogd() ? 'En jij doet ook mee!' : 'Doe jij ook mee?'}`;
-    // 10 names on a phone, 20 on a wider screen: all of them (newest first) while they fit,
-    // otherwise a random pick on every visit. Your own name always comes first, with an accent.
-    const max = matchMedia('(max-width: 600px)').matches ? 10 : 20;
-    const namen = personen.filter(p => p.voornaam || p.bijnaam || p.achternaam);
-    const mij = namen.find(isZelf);
-    let anderen = namen.filter(p => p !== mij).reverse();
-    const plek = max - (mij ? 1 : 0);
-    if (anderen.length > plek) {
-      for (let i = anderen.length - 1; i > 0; i--) {      // Fisher-Yates shuffle
-        const j = Math.floor(Math.random() * (i + 1));
-        [anderen[i], anderen[j]] = [anderen[j], anderen[i]];
-      }
-      anderen = anderen.slice(0, plek);
-    }
-    const rij = [...(mij ? [mij] : []), ...anderen];
-    // Logged in: a small round photo in the name (nu, otherwise toen).
-    const pad = p => p.foto_nu || p.foto_toen;
-    const paden = rij.map(pad).filter(Boolean).map(x => x + '.jpg');
-    const urls = paden.length ? await Data.fotoUrls(paden).catch(() => ({})) : {};
-    const mini = p => pad(p) && urls[pad(p) + '.jpg'] ? `<img class="mini" src="${Reunie.esc(urls[pad(p) + '.jpg'])}" alt="">` : '';
-    // Your own name goes to your registration, others to their card on "Wie doen er mee?".
-    const toon = rij.map(p => {
-      const naam = p.voornaam || p.bijnaam || p.achternaam;
-      const [href, extra] = p === mij ? ['mijn.html', ' class="zelf" title="Dit ben jij: naar je inschrijving"']
-        : [`deelnemers.html#p-${personen.indexOf(p)}`, ''];
-      return `<a href="${href}"${extra}>${mini(p)}${Reunie.esc(naam)}${p.geboortejaar ? ', ' + Reunie.leeftijd(p.geboortejaar) : ''}</a>`;
-    });
-    if (totaal > toon.length) toon.push(`<a href="deelnemers.html">+ ${totaal - toon.length}</a>`);
-    $('faces').innerHTML = toon.join('');
-  })();
-
-  // The newest story and photo. Memories are for participants only; others get a teaser.
-  (async () => {
-    const E = Reunie.esc;
-    const blok = html => { $('nieuwst-in').innerHTML = html; $('nieuwst').hidden = false; };
-    const mag = Data.ingelogd() && await Data.magVerhalen().catch(() => false);
-    if (!mag) {
-      const [v, f] = await Promise.all([Data.aantalVerhalen().catch(() => 0), Data.aantalFotos().catch(() => 0)]);
-      const delen = [v && `${v} ${v === 1 ? 'verhaal' : 'verhalen'}`, f && `${f} ${f === 1 ? 'foto' : "foto's"}`].filter(Boolean);
-      if (!delen.length) return;
-      return blok(`<a class="card" href="herinneringen.html"><h3>Al ${delen.join(' en ')} van vroeger gedeeld!</h3>
-        <p class="kort muted">Herinneringen zijn er voor de deelnemers van de reünie. ${Data.ingelogd() ? 'Maak je inschrijving af' : 'Doe mee of log in'} om ze te bekijken.</p>
-        <span class="verder">Naar Herinneringen →</span></a>`);
-    }
-    const [verhalen, fotos] = await Promise.all([Data.verhalen().catch(() => []), Data.fotos().catch(() => [])]);
-    const v = verhalen.find(x => x.status === 'geplaatst'), f = fotos.find(x => x.status === 'geplaatst');
-    const door = x => `gedeeld door ${E(x.eigen ? 'jou' : Reunie.naam(x) || 'iemand van de club')}`;
-    const kaarten = [];
-    if (v) {
-      const tekst = v.tekst.replace(/\s+/g, ' ');
-      const kort = tekst.length > 200 ? tekst.slice(0, 180).replace(/\s+\S*$/, '') + '…' : tekst;
-      kaarten.push(`<a class="card" href="herinneringen.html#verhaal-${E(v.id)}"><p class="soort">Verhaal</p>
-        <h3>${E(v.titel)}</h3><p class="door">${door(v)}</p><p class="kort">${E(kort)}</p><span class="verder">Lees het verhaal →</span></a>`);
-    }
-    if (f) {
-      const klein = f.pad + '-klein.jpg';
-      const url = (await Data.fotoUrls([klein]).catch(() => ({})))[klein] || '';
-      kaarten.push(`<a class="card" href="herinneringen.html#foto-${E(f.id)}"><p class="soort">Foto</p><div class="foto">
-        <img src="${E(url)}" alt="${E(f.titel)}"><div>${f.titel ? `<h3>${E(f.titel)}</h3>` : ''}
-        <p class="door">${E([f.speltak, f.jaar].filter(Boolean).join(' · '))}${f.speltak || f.jaar ? '<br>' : ''}${door(f)}</p>
-        <span class="verder">Bekijk de foto →</span></div></div></a>`);
-    }
-    if (kaarten.length) blok(`<div class="${kaarten.length > 1 ? 'two' : ''}">${kaarten.join('')}</div>`);
-  })();
-</script>
+<p><a href="https://reunie.scoutingbrandevoort.nl/">De reünie is verhuisd naar reunie.scoutingbrandevoort.nl</a></p>
 </body>
 </html>
